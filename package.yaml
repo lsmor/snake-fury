@@ -24,6 +24,7 @@ dependencies:
 - containers
 - random
 - array
+- monad-loops
 
 library:
   source-dirs: src
