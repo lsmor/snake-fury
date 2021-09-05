@@ -7,7 +7,8 @@ import System.Random ( getStdGen, randomRIO )
 import qualified Data.Sequence as S
 import Control.Monad.Loops ( iterateUntil )
 import Data.Array ((//))
-import Control.Monad (forever)
+import Snake (AppState(boardInfo))
+
 
 getRandomPoint :: Int -> Int -> IO Board.Point
 getRandomPoint h w = (,) <$> randomRIO (1, h) <*> randomRIO (1, w) 
@@ -16,7 +17,7 @@ main :: IO ()
 main = do
     -- Game Init
     let h = 10
-        w = 10
+        w = 20
     snakeInit <- getRandomPoint h w
     appleInit <- iterateUntil (snakeInit /= ) $ getRandomPoint h w
     sg        <- getStdGen
@@ -26,10 +27,10 @@ main = do
     
     -- Game loop
     putStr $ Board.ppBoard board binf
-    updateOnIntput gameState board binf
+    updateOnIntput gameState board
 
-  where updateOnIntput :: Snake.AppState -> Board.Board -> Board.BoardInfo -> IO ()
-        updateOnIntput app b binf = do
+  where updateOnIntput :: Snake.AppState -> Board.Board -> IO ()
+        updateOnIntput app b = do
             c <- getLine 
             let updateApp = 
                     case c of
@@ -43,7 +44,7 @@ main = do
             putStr "\ESC[2J"
             putStr $ Snake.ppAppState app'
             putStr "\n"
-            putStr $ Board.ppBoard board' binf
+            putStr $ Board.ppBoard board' (boardInfo app')
 
-            updateOnIntput app' board' binf
+            updateOnIntput app' board'
 
