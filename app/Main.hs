@@ -7,12 +7,14 @@ import System.Random ( getStdGen, randomRIO )
 import qualified Data.Sequence as S
 import Control.Monad.Loops ( iterateUntil )
 import Data.Array ((//))
+import Control.Monad (forever)
 
 getRandomPoint :: Int -> Int -> IO Board.Point
 getRandomPoint h w = (,) <$> randomRIO (1, h) <*> randomRIO (1, w) 
 
 main :: IO ()
 main = do
+    -- Game Init
     let h = 10
         w = 10
     snakeInit <- getRandomPoint h w
@@ -21,9 +23,27 @@ main = do
     let binf = BoardInfo h w
         gameState = Snake.AppState (Snake.SnakeSeq snakeInit S.Empty) appleInit Snake.North binf sg
         board = Board.buildInitialBoard binf snakeInit appleInit
-    print snakeInit
-    print appleInit
+    
+    -- Game loop
     putStr $ Board.ppBoard board binf
-    let (_,delta) = Snake.move gameState
-    putStrLn " "
-    putStr $ Board.ppBoard (board // delta) binf
+    updateOnIntput gameState board binf
+
+  where updateOnIntput :: Snake.AppState -> Board.Board -> Board.BoardInfo -> IO ()
+        updateOnIntput app b binf = do
+            c <- getLine 
+            let updateApp = 
+                    case c of
+                        "w" -> app {Snake.movement = Snake.North}
+                        "a" -> app {Snake.movement = Snake.West}
+                        "d" -> app {Snake.movement = Snake.East}
+                        "s" -> app {Snake.movement = Snake.South}
+                        _   -> app
+                (app',delta) = Snake.move updateApp
+                board' = b // delta
+            putStr "\ESC[2J"
+            putStr $ Snake.ppAppState app'
+            putStr "\n"
+            putStr $ Board.ppBoard board' binf
+
+            updateOnIntput app' board' binf
+

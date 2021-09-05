@@ -7,6 +7,7 @@ import qualified Board
 import Data.Sequence ( Seq(..))
 import qualified Data.Sequence as S
 import System.Random
+import Debug.Trace(trace)
 
 data Movement = North | South | East | West deriving (Show, Eq)
 data SnakeSeq = SnakeSeq {snakeHead :: Point, snakeBody :: Seq Point} deriving (Show, Eq)
@@ -39,11 +40,15 @@ newApple (AppState _ _ _ (BoardInfo n i) sg) = ((n', i') , g1')
 move :: AppState -> (AppState, DeltaBoard)
 move s@(AppState (SnakeSeq h sb) applePos _ _ g) =
   case sb of
-    S.Empty          | isEatingApple     -> (s {snakeSeq = SnakeSeq n (S.singleton h), randomGen = g'},  [(n, Board.Snake), (newApplePos, Board.Apple)])
+    S.Empty          | isEatingApple     -> (s {snakeSeq = SnakeSeq n (S.singleton h), applePosition = newApplePos, randomGen = g'},  [(n, Board.Snake), (newApplePos, Board.Apple)])
     S.Empty          | not isEatingApple -> (s {snakeSeq = SnakeSeq n S.Empty}, [(n, Board.Snake), (h, Board.Empty)] )
     x :<| S.Empty    | not isEatingApple -> (s {snakeSeq = SnakeSeq n (S.singleton h)}, [(n, Board.Snake), (x, Board.Empty)] )
     x :<| (xs :|> t) | not isEatingApple -> (s {snakeSeq = SnakeSeq n (h :<| x :<| xs)}, [(n, Board.Snake), (t, Board.Empty)] )
-    xs               | isEatingApple     -> (s {snakeSeq = SnakeSeq n xs, randomGen = g'}, [(n, Board.Snake), (newApplePos, Board.Apple)] )
+    xs               | isEatingApple     -> (s {snakeSeq = SnakeSeq n (h :<| xs), applePosition = newApplePos, randomGen = g'}, [(n, Board.Snake), (newApplePos, Board.Apple)] )
   where n = nextHead s
         isEatingApple = n == applePos
         (newApplePos, g') = newApple s
+
+
+ppAppState :: AppState -> String
+ppAppState (AppState ss x0 move bi sg) = "snake: " <> show ss <> "\n apple: " <> show x0 <> "\n mov: " <> show move <> "\n binfo: " <> show bi

@@ -25,6 +25,7 @@ dependencies:
 - random
 - array
 - monad-loops
+- bytestring
 
 library:
   source-dirs: src

@@ -5,6 +5,7 @@ import Control.Monad ( foldM_ )
 import Data.Foldable ( foldl' )
 import Debug.Trace(trace)
 
+
 type Point = (Int, Int)
 data CellType = Empty | Snake | Apple deriving (Show, Eq)
 
