@@ -44,23 +44,47 @@ nextHead (AppState (SnakeSeq (x, y) _) _ mov (BoardInfo h w) _) =
 -- Calculates a new random apple, avoiding creating the apple in the same place, or in the snake body
 newApple :: AppState -> (Point, StdGen)
 newApple app@(AppState ss x0 move bi sg) =
-    if x0' == x0 || x0' `inSnake` ss 
-      then newApple app{randomGen = sg'} 
+    if x0' == x0 || x0' `inSnake` ss
+      then newApple app{randomGen = sg'}
       else (x0', sg')
   where (x0', sg') = makeRandomPoint bi sg
 
 
 -- Actually all patterns are covered but HLS says no...
 move :: AppState -> (AppState, DeltaBoard)
-move s@(AppState (SnakeSeq h sb) applePos _ _ g) =
-  case sb of
-    S.Empty          | isEatingApple     -> (s {snakeSeq = SnakeSeq n (S.singleton h), applePosition = newApplePos, randomGen = g'},  [(n, Board.Snake), (newApplePos, Board.Apple)])
-    S.Empty          | not isEatingApple -> (s {snakeSeq = SnakeSeq n S.Empty}, [(n, Board.Snake), (h, Board.Empty)] )
-    x :<| S.Empty    | not isEatingApple -> (s {snakeSeq = SnakeSeq n (S.singleton h)}, [(n, Board.Snake), (x, Board.Empty)] )
-    x :<| (xs :|> t) | not isEatingApple -> (s {snakeSeq = SnakeSeq n (h :<| x :<| xs)}, [(n, Board.Snake), (t, Board.Empty)] )
-    xs               | isEatingApple     -> (s {snakeSeq = SnakeSeq n (h :<| xs), applePosition = newApplePos, randomGen = g'}, [(n, Board.Snake), (newApplePos, Board.Apple)] )
-  where n = nextHead s
-        isEatingApple = n == applePos
+move s@(AppState (SnakeSeq oldHead sb) applePos _ _ g) =
+  case isEatingApple of
+    True ->
+      case sb of
+        S.Empty ->
+          let newSnake = SnakeSeq newHead (S.singleton oldHead)
+              newState = s {snakeSeq = newSnake, applePosition = newApplePos, randomGen = g'}
+              delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (newApplePos, Board.Apple)]
+           in (newState,  delta)
+        xs ->
+          let newSnake = SnakeSeq newHead (oldHead :<| xs)
+              newState = s {snakeSeq = newSnake, applePosition = newApplePos, randomGen = g'}
+              delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (newApplePos, Board.Apple)]
+           in (newState,  delta)
+    False ->
+      case sb of
+        S.Empty ->
+          let newSnake = SnakeSeq newHead S.empty
+              newState = s {snakeSeq = newSnake}
+              delta = [(newHead, Board.SnakeHead), (oldHead, Board.Empty)]
+           in (newState,  delta)
+        x :<| S.Empty  ->
+          let newSnake = SnakeSeq newHead (S.singleton oldHead)
+              newState = s {snakeSeq = newSnake}
+              delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (x, Board.Empty)]
+           in (newState,  delta)
+        x :<| (xs :|> t)  ->
+          let newSnake = SnakeSeq newHead (oldHead :<| x :<| xs)
+              newState = s {snakeSeq = newSnake}
+              delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (t, Board.Empty)]
+           in (newState,  delta)
+  where newHead           = nextHead s
+        isEatingApple     = newHead == applePos
         (newApplePos, g') = newApple s
 
 ppAppState :: AppState -> String

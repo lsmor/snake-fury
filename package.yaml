@@ -26,6 +26,7 @@ dependencies:
 - array
 - monad-loops
 - bytestring
+- haskeline
 
 library:
   source-dirs: src
