@@ -34,9 +34,7 @@ library
   build-depends:
       array
     , base >=4.7 && <5
-    , bytestring
     , containers
-    , haskeline
     , monad-loops
     , random
   default-language: Haskell2010
@@ -51,9 +49,7 @@ executable snake-exe
   build-depends:
       array
     , base >=4.7 && <5
-    , bytestring
     , containers
-    , haskeline
     , monad-loops
     , random
     , snake
@@ -70,9 +66,7 @@ test-suite snake-test
   build-depends:
       array
     , base >=4.7 && <5
-    , bytestring
     , containers
-    , haskeline
     , monad-loops
     , random
     , snake

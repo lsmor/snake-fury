@@ -23,10 +23,8 @@ dependencies:
 - base >= 4.7 && < 5
 - containers
 - random
-- array
 - monad-loops
-- bytestring
-- haskeline
+- array
 
 library:
   source-dirs: src
