@@ -23,8 +23,8 @@ dependencies:
 - base >= 4.7 && < 5
 - containers
 - random
-- monad-loops
 - array
+- BoundedChan
 
 library:
   source-dirs: src

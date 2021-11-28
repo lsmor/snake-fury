@@ -20,6 +20,12 @@ data AppState = AppState
   }
   deriving (Show, Eq)
 
+opositeMovement :: Movement -> Movement
+opositeMovement North = South
+opositeMovement South = North
+opositeMovement East = West
+opositeMovement West = East
+
 -- Purely creates a random point within the board limits
 makeRandomPoint :: BoardInfo -> StdGen -> (Point, StdGen)
 makeRandomPoint (BoardInfo n i) sg = (newPoint , g1')
@@ -32,7 +38,7 @@ makeRandomPoint (BoardInfo n i) sg = (newPoint , g1')
 inSnake :: Point -> SnakeSeq  -> Bool
 inSnake x0 (SnakeSeq x1 seq) = x0 == x1 || isJust (x0 `S.elemIndexL` seq)
 
--- Calcualates de new head of the snake
+-- Calculates de new head of the snake
 nextHead :: AppState -> Point
 nextHead (AppState (SnakeSeq (x, y) _) _ mov (BoardInfo h w) _) =
   case mov of
@@ -50,42 +56,43 @@ newApple app@(AppState ss x0 move bi sg) =
   where (x0', sg') = makeRandomPoint bi sg
 
 
--- Actually all patterns are covered but HLS says no...
-move :: AppState -> (AppState, DeltaBoard)
+move :: AppState -> (AppState, Board.RenderMessage)
 move s@(AppState (SnakeSeq oldHead sb) applePos _ _ g) =
-  case isEatingApple of
-    True ->
-      case sb of
-        S.Empty ->
-          let newSnake = SnakeSeq newHead (S.singleton oldHead)
-              newState = s {snakeSeq = newSnake, applePosition = newApplePos, randomGen = g'}
-              delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (newApplePos, Board.Apple)]
-           in (newState,  delta)
-        xs ->
-          let newSnake = SnakeSeq newHead (oldHead :<| xs)
-              newState = s {snakeSeq = newSnake, applePosition = newApplePos, randomGen = g'}
-              delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (newApplePos, Board.Apple)]
-           in (newState,  delta)
-    False ->
-      case sb of
-        S.Empty ->
-          let newSnake = SnakeSeq newHead S.empty
-              newState = s {snakeSeq = newSnake}
-              delta = [(newHead, Board.SnakeHead), (oldHead, Board.Empty)]
-           in (newState,  delta)
-        x :<| S.Empty  ->
-          let newSnake = SnakeSeq newHead (S.singleton oldHead)
-              newState = s {snakeSeq = newSnake}
-              delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (x, Board.Empty)]
-           in (newState,  delta)
-        x :<| (xs :|> t)  ->
-          let newSnake = SnakeSeq newHead (oldHead :<| x :<| xs)
-              newState = s {snakeSeq = newSnake}
-              delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (t, Board.Empty)]
-           in (newState,  delta)
+  if isColision
+    then (s, Board.GameOver)
+    else 
+      case isEatingApple of
+        True ->
+          case sb of
+            S.Empty ->
+              let newSnake = SnakeSeq newHead (S.singleton oldHead)
+                  newState = s {snakeSeq = newSnake, applePosition = newApplePos, randomGen = g'}
+                  delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (newApplePos, Board.Apple)]
+              in (newState,  Board.RenderBoard delta)
+            xs ->
+              let newSnake = SnakeSeq newHead (oldHead :<| xs)
+                  newState = s {snakeSeq = newSnake, applePosition = newApplePos, randomGen = g'}
+                  delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (newApplePos, Board.Apple)]
+              in (newState, Board.RenderBoard delta)
+        False ->
+          case sb of
+            S.Empty ->
+              let newSnake = SnakeSeq newHead S.empty
+                  newState = s {snakeSeq = newSnake}
+                  delta = [(newHead, Board.SnakeHead), (oldHead, Board.Empty)]
+              in (newState, Board.RenderBoard delta)
+            x :<| S.Empty  ->
+              let newSnake = SnakeSeq newHead (S.singleton oldHead)
+                  newState = s {snakeSeq = newSnake}
+                  delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (x, Board.Empty)]
+              in (newState, Board.RenderBoard delta)
+            x :<| (xs :|> t)  ->
+              let newSnake = SnakeSeq newHead (oldHead :<| x :<| xs)
+                  newState = s {snakeSeq = newSnake}
+                  delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (t, Board.Empty)]
+              in (newState, Board.RenderBoard delta)
+
   where newHead           = nextHead s
+        isColision        = newHead `elem` sb
         isEatingApple     = newHead == applePos
         (newApplePos, g') = newApple s
-
-ppAppState :: AppState -> String
-ppAppState (AppState ss x0 move bi sg) = "snake: " <> show ss <> "\n apple: " <> show x0 <> "\n mov: " <> show move <> "\n binfo: " <> show bi
