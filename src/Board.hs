@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Board where
 
@@ -6,7 +7,8 @@ import Data.Array ( (//), listArray, Array, elems )
 import Control.Monad ( foldM_ )
 import Data.Foldable ( foldl' )
 import Debug.Trace(trace)
-
+import qualified Data.ByteString.Builder as B
+import Data.ByteString.Builder (Builder)
 
 type Point = (Int, Int)
 data CellType = Empty | Snake | SnakeHead | Apple deriving (Show, Eq)
@@ -41,20 +43,20 @@ updateRenderState (RenderState b binf gOver) message =
     GameOver          -> RenderState b binf True
 
 -- | Provisional Pretty printer
-ppCell :: CellType -> String
-ppCell Empty     = "·"
-ppCell Snake     = "0"
-ppCell SnakeHead = "$"
-ppCell Apple     = "X"
+ppCell :: CellType -> Builder
+ppCell Empty     = "· "
+ppCell Snake     = "0 "
+ppCell SnakeHead = "$ "
+ppCell Apple     = "X "
 
-render :: RenderState -> String
+render :: RenderState -> Builder
 render (RenderState b binf@(BoardInfo h w) gOver) =
   if gOver
-    then fst $ boardToString(emptyGrid binf)
+    then fst $ boardToString $ emptyGrid binf
     else fst $ boardToString b
   where 
-    boardToString =  foldl' fprint ("", 0)
+    boardToString =  foldl' fprint (mempty, 0)
     fprint (!s, !i) cell = 
       if ((i + 1) `mod` w) == 0 
-        then (s <> ppCell cell <> "\n", i + 1 )
+        then (s <> ppCell cell <> B.charUtf8 '\n', i + 1 )
         else (s <> ppCell cell , i + 1)

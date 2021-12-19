@@ -8,9 +8,11 @@ import qualified Data.Sequence as S
 import System.Environment (getArgs)
 import Control.Concurrent
     ( forkIO, newEmptyMVar, putMVar, threadDelay, MVar, readMVar )
-import System.IO (stdin, hReady, hSetBuffering, BufferMode (NoBuffering), hSetEcho)
+import System.IO (stdin, hReady, hSetBuffering, BufferMode (NoBuffering), hSetEcho, stdout)
 import Control.Concurrent.BoundedChan
     ( newBoundedChan, tryReadChan, tryWriteChan, BoundedChan )
+import qualified Data.ByteString.Builder as B
+
 
 data Clock = Tick
 data Event = ClockEvent Clock | UserEvent Snake.Movement
@@ -65,6 +67,7 @@ main = do
     -- enable reading key strokes
     hSetBuffering stdin NoBuffering
     hSetEcho stdin False
+    -- hSetBuffering stdout $ BlockBuffering Nothing
     -- Game Init
     [h, w, timeSpeed] <- fmap read <$> getArgs
     (snakeInit, appleInit) <- inititalizePoints h w
@@ -93,6 +96,6 @@ main = do
                         else Snake.move $ app {Snake.movement = move}
             board' = b `Board.updateRenderState` delta
         putStr "\ESC[2J"
-        putStr $ Board.render board'
+        B.hPutBuilder stdout $ Board.render board'
         gameloop app' board' timeSpeed queue
 
