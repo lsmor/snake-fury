@@ -8,28 +8,26 @@ import System.Random ( getStdGen, randomRIO )
 import qualified Data.Sequence as S
 import System.Environment (getArgs)
 import Control.Concurrent
-    ( forkIO, newEmptyMVar, putMVar, threadDelay, MVar, readMVar, newMVar, takeMVar, swapMVar )
+    ( forkIO, newEmptyMVar, putMVar, threadDelay, MVar, readMVar, newMVar, swapMVar )
 import System.IO (stdin, hReady, hSetBuffering, BufferMode (NoBuffering), hSetEcho, stdout)
 import Control.Concurrent.BoundedChan
     ( newBoundedChan, tryReadChan, tryWriteChan, BoundedChan )
 import qualified Data.ByteString.Builder as B
-import Control.Monad (guard)
 
 
 data Clock = Tick
 data Event = ClockEvent Clock | UserEvent Snake.Movement
 type UserInputQueue = BoundedChan Snake.Movement
 type TimeQueue = MVar Clock
-data EventQueue = EventQueue {clock :: TimeQueue, userInput :: UserInputQueue}
-type GlobalSpeed = MVar (Int, Int)
+data EventQueue = EventQueue {clock :: TimeQueue, userInput :: UserInputQueue, speed :: MVar (Int, Int)}
 
 
 -- EventQueue utils
-writeClock :: GlobalSpeed -> EventQueue -> IO ()
-writeClock timeSpeed queue@(EventQueue c _) = readMVar timeSpeed >>= threadDelay . fst >> putMVar c Tick >> writeClock timeSpeed queue
+writeClock :: EventQueue -> IO ()
+writeClock  queue@(EventQueue clockQueue _ globalSpeed) = readMVar globalSpeed >>= threadDelay . fst >> putMVar clockQueue Tick >> writeClock queue
 
 writeUserInput :: EventQueue -> IO ()
-writeUserInput queue@(EventQueue _ userqueue) = do
+writeUserInput queue@(EventQueue _ userqueue _) = do
     c <- getKey
     case c of
       "\ESC[A" -> tryWriteChan userqueue Snake.North >> writeUserInput queue
@@ -38,11 +36,14 @@ writeUserInput queue@(EventQueue _ userqueue) = do
       "\ESC[B" -> tryWriteChan userqueue Snake.South >> writeUserInput queue
       _   -> writeUserInput queue
 
+writeSpeed :: Int -> EventQueue -> IO ()
+writeSpeed = undefined 
+
 readEvent :: EventQueue -> IO Event
-readEvent (EventQueue c userqueue) = do
-  mv <- tryReadChan userqueue
+readEvent (EventQueue clockQueue userQueue _) = do
+  mv <- tryReadChan userQueue
   case mv of
-    Nothing -> ClockEvent <$> readMVar c
+    Nothing -> ClockEvent <$> readMVar clockQueue
     Just move -> return $ UserEvent move
 
 
@@ -79,17 +80,17 @@ main = do
         board = Board.buildInitialBoard binf snakeInit appleInit
     newUserEventQueue <- newBoundedChan 3
     newClock <- newEmptyMVar
-    globalSpeed <- newMVar (timeSpeed, timeSpeed)
+    newSpeed <- newMVar (timeSpeed, timeSpeed)
     -- Game Loop
-    let eventQueue = EventQueue newClock newUserEventQueue
-    _ <- forkIO $ writeClock globalSpeed eventQueue
-    _ <- forkIO $ gameloop gameState board globalSpeed eventQueue
+    let eventQueue = EventQueue newClock newUserEventQueue newSpeed
+    _ <- forkIO $ writeClock eventQueue
+    _ <- forkIO $ gameloop gameState board eventQueue
     writeUserInput eventQueue
 
   where
-    gameloop :: Snake.AppState -> Board.RenderState -> GlobalSpeed -> EventQueue -> IO ()
-    gameloop app b globalSpeed queue = do
-        (currentSpeed, initialSpeed) <- readMVar globalSpeed
+    gameloop :: Snake.AppState -> Board.RenderState -> EventQueue -> IO ()
+    gameloop app b queue@(EventQueue _ _ globalSpeed) =  do
+        (currentSpeed, initialSpeed) <- readMVar $ speed queue
         threadDelay currentSpeed
         let speedfactor =  1 - (fromIntegral @Int @Double (min (Board.score b) 100 `quot` 10) / 10.0)
             newSpeed    = floor $ fromIntegral initialSpeed * speedfactor
@@ -105,4 +106,4 @@ main = do
             board' = b `Board.updateMessages` deltas
         putStr "\ESC[2J"
         B.hPutBuilder stdout $ Board.render board'
-        gameloop app' board' globalSpeed queue
+        gameloop app' board' queue
