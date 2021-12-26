@@ -1,17 +1,19 @@
+{-# LANGUAGE TypeApplications #-}
 module Main where
 
 import qualified Board
 import qualified Snake
-import Board (BoardInfo(BoardInfo))
+import Board (BoardInfo(BoardInfo), updateMessages)
 import System.Random ( getStdGen, randomRIO )
 import qualified Data.Sequence as S
 import System.Environment (getArgs)
 import Control.Concurrent
-    ( forkIO, newEmptyMVar, putMVar, threadDelay, MVar, readMVar )
+    ( forkIO, newEmptyMVar, putMVar, threadDelay, MVar, readMVar, newMVar, takeMVar, swapMVar )
 import System.IO (stdin, hReady, hSetBuffering, BufferMode (NoBuffering), hSetEcho, stdout)
 import Control.Concurrent.BoundedChan
     ( newBoundedChan, tryReadChan, tryWriteChan, BoundedChan )
 import qualified Data.ByteString.Builder as B
+import Control.Monad (guard)
 
 
 data Clock = Tick
@@ -19,11 +21,12 @@ data Event = ClockEvent Clock | UserEvent Snake.Movement
 type UserInputQueue = BoundedChan Snake.Movement
 type TimeQueue = MVar Clock
 data EventQueue = EventQueue {clock :: TimeQueue, userInput :: UserInputQueue}
+type GlobalSpeed = MVar (Int, Int)
 
 
 -- EventQueue utils
-writeClock :: Int -> EventQueue -> IO ()
-writeClock timeSpeed queue@(EventQueue c _) = threadDelay timeSpeed >> putMVar c Tick >> writeClock timeSpeed queue
+writeClock :: GlobalSpeed -> EventQueue -> IO ()
+writeClock timeSpeed queue@(EventQueue c _) = readMVar timeSpeed >>= threadDelay . fst >> putMVar c Tick >> writeClock timeSpeed queue
 
 writeUserInput :: EventQueue -> IO ()
 writeUserInput queue@(EventQueue _ userqueue) = do
@@ -67,8 +70,7 @@ main = do
     -- enable reading key strokes
     hSetBuffering stdin NoBuffering
     hSetEcho stdin False
-    -- hSetBuffering stdout $ BlockBuffering Nothing
-    -- Game Init
+    -- Game Initializacion
     [h, w, timeSpeed] <- fmap read <$> getArgs
     (snakeInit, appleInit) <- inititalizePoints h w
     sg <- getStdGen
@@ -77,25 +79,30 @@ main = do
         board = Board.buildInitialBoard binf snakeInit appleInit
     newUserEventQueue <- newBoundedChan 3
     newClock <- newEmptyMVar
+    globalSpeed <- newMVar (timeSpeed, timeSpeed)
+    -- Game Loop
     let eventQueue = EventQueue newClock newUserEventQueue
-    _ <- forkIO $ writeClock timeSpeed eventQueue
-    _ <- forkIO $ gameloop gameState board timeSpeed eventQueue
+    _ <- forkIO $ writeClock globalSpeed eventQueue
+    _ <- forkIO $ gameloop gameState board globalSpeed eventQueue
     writeUserInput eventQueue
 
   where
-    gameloop :: Snake.AppState -> Board.RenderState -> Int -> EventQueue -> IO ()
-    gameloop app b timeSpeed queue = do
-        threadDelay timeSpeed
+    gameloop :: Snake.AppState -> Board.RenderState -> GlobalSpeed -> EventQueue -> IO ()
+    gameloop app b globalSpeed queue = do
+        (currentSpeed, initialSpeed) <- readMVar globalSpeed
+        threadDelay currentSpeed
+        let speedfactor =  1 - (fromIntegral @Int @Double (min (Board.score b) 100 `quot` 10) / 10.0)
+            newSpeed    = floor $ fromIntegral initialSpeed * speedfactor
+        _ <- swapMVar globalSpeed (newSpeed, initialSpeed)
         event <- readEvent queue
-        let (app',delta) =
+        let (app',deltas) =
               case event of
                     ClockEvent Tick -> Snake.move app
                     UserEvent move ->
                       if Snake.movement app == Snake.opositeMovement move
                         then Snake.move app
                         else Snake.move $ app {Snake.movement = move}
-            board' = b `Board.updateRenderState` delta
+            board' = b `Board.updateMessages` deltas
         putStr "\ESC[2J"
         B.hPutBuilder stdout $ Board.render board'
-        gameloop app' board' timeSpeed queue
-
+        gameloop app' board' globalSpeed queue
