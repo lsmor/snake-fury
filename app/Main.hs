@@ -36,8 +36,15 @@ writeUserInput queue@(EventQueue _ userqueue _) = do
       "\ESC[B" -> tryWriteChan userqueue Snake.South >> writeUserInput queue
       _   -> writeUserInput queue
 
-writeSpeed :: Int -> EventQueue -> IO ()
-writeSpeed = undefined 
+writeSpeed :: Int -> EventQueue -> IO Int
+writeSpeed score queue = do
+    (currentSpeed, initialSpeed) <- readMVar $ speed queue
+    let level = min score 50 `quot` 10              -- maximun of 5 levels every 10 apples
+        speedFactor = 1 - fromIntegral level / 10.0 -- every level speeds up the time by a 10%
+        newSpeed  = floor @Double $ fromIntegral initialSpeed * speedFactor
+    if currentSpeed == newSpeed
+      then return currentSpeed
+      else swapMVar (speed queue) (newSpeed, initialSpeed) >> return newSpeed
 
 readEvent :: EventQueue -> IO Event
 readEvent (EventQueue clockQueue userQueue _) = do
@@ -89,12 +96,9 @@ main = do
 
   where
     gameloop :: Snake.AppState -> Board.RenderState -> EventQueue -> IO ()
-    gameloop app b queue@(EventQueue _ _ globalSpeed) =  do
-        (currentSpeed, initialSpeed) <- readMVar $ speed queue
+    gameloop app b queue =  do
+        currentSpeed <- writeSpeed (Board.score b) queue
         threadDelay currentSpeed
-        let speedfactor =  1 - (fromIntegral @Int @Double (min (Board.score b) 100 `quot` 10) / 10.0)
-            newSpeed    = floor $ fromIntegral initialSpeed * speedfactor
-        _ <- swapMVar globalSpeed (newSpeed, initialSpeed)
         event <- readEvent queue
         let (app',deltas) =
               case event of
