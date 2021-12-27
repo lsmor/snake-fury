@@ -61,7 +61,7 @@ writeUserInput queue@(EventQueue _ userqueue _) = do
       "\ESC[B" -> tryWriteChan userqueue Snake.South >> writeUserInput queue
       _   -> writeUserInput queue
 
--- | Given the current score, updates the global shared speed every 10 points by a factor of 10%
+-- | Given the current score, updates the global shared speed every 10 points by a factor of 10%. Returns the current state
 writeSpeed :: Int -> EventQueue -> IO Int
 writeSpeed score queue = do
     (currentSpeed, initialSpeed) <- readMVar $ speed queue
