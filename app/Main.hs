@@ -1,9 +1,9 @@
 
 module Main where
 
-import qualified Board
+import qualified RenderState as Board
 import qualified Snake
-import Board (BoardInfo(BoardInfo), updateMessages)
+import RenderState (BoardInfo(BoardInfo), updateMessages)
 import System.Random ( getStdGen, randomRIO )
 import qualified Data.Sequence as S
 import System.Environment (getArgs)
