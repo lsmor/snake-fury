@@ -25,8 +25,8 @@ source-repository head
 
 library
   exposed-modules:
-      Board
       EventQueue
+      RenderState
       Snake
   other-modules:
       Paths_snake

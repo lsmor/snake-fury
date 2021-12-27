@@ -22,9 +22,11 @@ import EventQueue
       Event(UserEvent, ClockEvent),
       EventQueue(EventQueue) )
 
+-- | Produces a random point. Use for game initialization, random point generation is done purely within Snake module.
 getRandomPoint :: Int -> Int -> IO Board.Point
 getRandomPoint h w = (,) <$> randomRIO (1, h) <*> randomRIO (1, w)
 
+-- | Sample two random points (snake head and apple) ensuring they are different
 inititalizePoints :: Int -> Int -> IO (Board.Point, Board.Point)
 inititalizePoints h w = do
   (snakeInit, appleInit) <- (,) <$> getRandomPoint h w <*> getRandomPoint h w
@@ -32,6 +34,7 @@ inititalizePoints h w = do
     then inititalizePoints h w
     else return (snakeInit, appleInit)
 
+-- | given the initial parameters height, width and initial time, It creates the initial state, the initial render state and the event queue
 gameInitialization :: Int -> Int -> Int -> IO (Snake.AppState, Board.RenderState , EventQueue)
 gameInitialization hight width initialspeed = do
   (snakeInit, appleInit) <- inititalizePoints hight width
@@ -62,6 +65,7 @@ gameloop app b queue =  do
     B.hPutBuilder stdout $ Board.render board'
     gameloop app' board' queue
 
+-- | main.
 main :: IO ()
 main = do
     -- enable reading key strokes
