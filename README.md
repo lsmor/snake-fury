@@ -1,4 +1,4 @@
-# Haskell's snake challenge for monads.
+# Haskell's snake challenge.
 
 **This is a work in progress**. The idea of this repo is to provide a learning path for Haskell via writing a simple but complex enough program: The Snake Game in the Console. The approach is the following:
 
