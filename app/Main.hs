@@ -3,7 +3,7 @@ module Main where
 
 import qualified RenderState as Board
 import qualified Snake
-import RenderState (BoardInfo(BoardInfo), updateMessages)
+import RenderState (BoardInfo(BoardInfo))
 import System.Random ( getStdGen, randomRIO )
 import qualified Data.Sequence as S
 import System.Environment (getArgs)
@@ -54,14 +54,14 @@ gameloop app b queue =  do
     currentSpeed <- writeSpeed (Board.score b) queue                 -- Update speed based in the score
     threadDelay currentSpeed                                         -- waits for the time specify in the global speed
     event <- readEvent queue                                         -- Read the next event in the queue
-    let (app',deltas) =                                              -- based in the type of the event, updates the state
+    let (deltas,app') =                                              -- based in the type of the event, updates the state
           case event of                                              -- and produces the messages neccesary for update the rendering
-                ClockEvent Tick -> Snake.move app
+                ClockEvent Tick ->  Snake.runStep app
                 UserEvent move ->
                   if Snake.movement app == Snake.opositeMovement move
-                    then Snake.move app
-                    else Snake.move $ app {Snake.movement = move}
-        board' = b `Board.updateMessages` deltas                     -- udpate the RenderState
+                    then Snake.runStep app 
+                    else Snake.runStep $ app {Snake.movement = move}
+    let board' = b `Board.updateMessages` deltas                     -- udpate the RenderState
     putStr "\ESC[2J"                                                 -- clean the state and print out the new render state
     B.hPutBuilder stdout $ Board.render board'
     gameloop app' board' queue                                       -- re-execute the game loop with the updated state.
