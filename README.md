@@ -18,4 +18,4 @@ This is not a Haskell tutorial. The challenger is expected to know (at least a l
 The current state is not good for contributions, since I am still defining the overall structure of the challenge.
 
 ## Current status
-The repo at HEAD executes the snake game, just write `stack run -- <height> <width> <speed microsecs>`, for example `stack run -- 40 60 200000` runs the snake game in the console with a 40x60 board and every step in the game happens every fifth of a second.
+The repo at `tag: v0.4-full-snake-documentation` executes the snake game, just write `git checkout v0.4-full-snake-documentation & stack run -- <height> <width> <speed microsecs>`, for example `git checkout v0.4-full-snake-documentation & stack run -- 40 60 200000` runs the snake game in the console with a 40x60 board and every step in the game happens every fifth of a second. (Notice that stack will download the compiler ant libraries, etc... If you have the same version installed in your system, it'll be quick, otherwise go and prepare a coffee)

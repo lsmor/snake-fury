@@ -40,7 +40,7 @@ data RenderState   = RenderState {board :: Board, info :: BoardInfo, gameOver ::
 -- | The `RenderState` can be update in three ways
 data RenderMessage = RenderBoard DeltaBoard | GameOver | Score
 
--- | Creates the empty grip from its info
+-- | Creates the empty grid from its info
 emptyGrid :: BoardInfo -> Board
 emptyGrid (BoardInfo h w) = listArray boardBounds emptyCells
     where boardBounds =  ((1, 1), (h, w))
