@@ -26,6 +26,7 @@ dependencies:
 - array
 - BoundedChan
 - bytestring
+- mtl
 
 library:
   source-dirs: src
