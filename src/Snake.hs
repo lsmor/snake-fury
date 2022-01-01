@@ -1,5 +1,6 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 {-|
 This module defines the logic of the game and the communication with the `Board.RenderState`
@@ -15,6 +16,8 @@ import Data.Maybe (isJust)
 import Control.Monad.State.Strict
     ( StateT(StateT), MonadState(get), gets, modify', State, runState )
 import Debug.Trace (trace)
+import Control.Monad (join)
+import Control.Monad.State.Class (put)
 
 -- | The Snake can move North, South, East, West
 data Movement = North | South | East | West deriving (Show, Eq)
@@ -35,8 +38,21 @@ data AppState = AppState
   deriving (Show, Eq)
 
 -- | our App as a synonym of State monad with AppState as it state
-type Game a = State AppState a
+newtype Game a = Game {runGame :: State AppState a}
 
+instance Functor Game where
+  fmap f (Game s) = Game $ fmap f s
+
+instance Applicative Game where
+  pure s = Game $ pure s
+  (Game f) <*> (Game a) = Game $ f <*> a
+
+instance Monad Game where
+  Game x >>= f = let y = runGame . f <$> x in Game $ join y
+
+instance MonadState AppState Game where
+  get = Game get
+  put s = Game $ put s
 
 -- | Calculate the Opposite movement. This is convenient since the snake can't change its movement to the opposite directly
 opositeMovement :: Movement -> Movement
@@ -63,7 +79,7 @@ moveSnake = do
             West  -> if y - 1 <= 0 then (x, w) else (x, y - 1)
   let isCollision       = newHead `elem` sb
   let isEatingApple     = newHead == applePos
-  let (newSnake, delta) = 
+  let (newSnake, delta) =
        case isEatingApple of
         True ->
           case sb of    -- The new snake body -|                The changes on the board -|
@@ -87,7 +103,7 @@ makeRandomPoint = do
   let (i', _)   = uniformR (1, i) g2
   let newPoint  = (n', i')
   modify' $ \s -> s {randomGen = g1'}  -- modify the old state updating the randomGen
-  return newPoint 
+  return newPoint
 
 -- | Calculates a new random apple, avoiding creating the apple in the same place, or in the snake body.
 -- It updates the apple position and the randomGen
@@ -110,9 +126,9 @@ step = do
   --     if isEatingApple, calculate a new one, update the list of messages a send them;
   --     else, just send the messages
   (delta, isCollision, isEatingApple) <- moveSnake
-  if 
+  if
     | isCollision -> return [Board.GameOver]
-    | isEatingApple -> do 
+    | isEatingApple -> do
         newApplePos <- newApple
         let delta' = (newApplePos, Board.Apple):delta
         return [Board.RenderBoard delta', Board.Score]
@@ -120,4 +136,4 @@ step = do
 
 
 runStep :: AppState -> ([Board.RenderMessage], AppState)
-runStep = runState step
+runStep = runState $ runGame step
