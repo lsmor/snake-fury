@@ -36,15 +36,15 @@ type UserInputQueue = BoundedChan Snake.Movement
 -- | The `TimeQueue` is a mutable variable which contains a Tick. This queue is feeded at constant time. 
 type TimeQueue = MVar Clock
 
--- | The `EventQueue` has a `TimeQueue` a `UserInputQueue` and the global speed of consumption. The speed is represented by the current speed and the initial speed
-data EventQueue = EventQueue {clock :: TimeQueue, userInput :: UserInputQueue, speed :: MVar (Int, Int)}
+-- | The `EventQueue` has a `TimeQueue` a `UserInputQueue` and the global speed of consumption. The speed is represented by the current speed
+data EventQueue = EventQueue {clock :: TimeQueue, userInput :: UserInputQueue, speed :: MVar Int}
 
 
 -- | Given the EventQueue feed the time queue at the speed determine by the global speed. Notice by desing this function blocks if the time queue
 -- has a Tick already. This is usefull because we don't know if the next movement is going to be a user event of a clock event. So we need a function
 -- which keeps the queue filled. 
 writeClock :: EventQueue -> IO ()
-writeClock  queue@(EventQueue clockQueue _ globalSpeed) = readMVar globalSpeed >>= threadDelay . fst >> putMVar clockQueue Tick >> writeClock queue
+writeClock  queue@(EventQueue clockQueue _ globalSpeed) = readMVar globalSpeed >>= threadDelay >> putMVar clockQueue Tick >> writeClock queue
 
 -- | This function translate key strokes to movements and push then into the queue. 
 -- The player is free to push keys as fast a he/she can but the userqueue is bounded,
@@ -62,15 +62,15 @@ writeUserInput queue@(EventQueue _ userqueue _) = do
       _   -> writeUserInput queue
 
 -- | Given the current score, updates the global shared speed every 10 points by a factor of 10%. Returns the current state
-writeSpeed :: Int -> EventQueue -> IO Int
-writeSpeed score queue = do
-    (currentSpeed, initialSpeed) <- readMVar $ speed queue
+writeSpeed :: Int -> Int -> EventQueue -> IO Int
+writeSpeed score initialSpeed queue = do
+    currentSpeed <- readMVar $ speed queue
     let level = min score 50 `quot` 10              -- maximun of 5 levels every 10 apples
         speedFactor = 1 - fromIntegral level / 10.0 -- every level speeds up the time by a 10%
         newSpeed  = floor @Double $ fromIntegral initialSpeed * speedFactor
     if currentSpeed == newSpeed
       then return currentSpeed
-      else swapMVar (speed queue) (newSpeed, initialSpeed) >> return newSpeed
+      else swapMVar (speed queue) newSpeed >> return newSpeed
 
 -- | pulls an Event from the queue. If the user input queue is empty, read from the clock queue
 readEvent :: EventQueue -> IO Event

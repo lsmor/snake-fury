@@ -41,7 +41,7 @@ gameInitialization hight width initialspeed = do
   sg <- getStdGen
   newUserEventQueue <- newBoundedChan 3
   newClock <- newEmptyMVar
-  newSpeed <- newMVar (initialspeed, initialspeed)
+  newSpeed <- newMVar initialspeed
   let binf = BoardInfo hight width
       gameState = Snake.AppState (Snake.SnakeSeq snakeInit S.Empty) appleInit Snake.North binf sg
       renderState = Board.buildInitialBoard binf snakeInit appleInit
@@ -49,9 +49,9 @@ gameInitialization hight width initialspeed = do
   return (gameState, renderState, eventQueue)
 
 -- | Given the app state, the render state and the event queue, updates everything in one time step, then execute again.
-gameloop :: Snake.AppState -> Board.RenderState -> EventQueue -> IO ()
-gameloop app b queue =  do
-    currentSpeed <- writeSpeed (Board.score b) queue                 -- Update speed based in the score
+gameloop :: Snake.AppState -> Board.RenderState -> EventQueue -> Int -> IO ()
+gameloop app b queue initialSpeed =  do
+    currentSpeed <- writeSpeed (Board.score b) initialSpeed  queue                 -- Update speed based in the score
     threadDelay currentSpeed                                         -- waits for the time specify in the global speed
     event <- readEvent queue                                         -- Read the next event in the queue
     let (deltas,app') =                                              -- based in the type of the event, updates the state
@@ -64,7 +64,7 @@ gameloop app b queue =  do
     let board' = b `Board.updateMessages` deltas                     -- udpate the RenderState
     putStr "\ESC[2J"                                                 -- clean the state and print out the new render state
     B.hPutBuilder stdout $ Board.render board'
-    gameloop app' board' queue                                       -- re-execute the game loop with the updated state.
+    gameloop app' board' queue initialSpeed                                      -- re-execute the game loop with the updated state.
 
 -- | main.
 main :: IO ()
@@ -79,5 +79,5 @@ main = do
 
     -- Game Loop. We run three different threads, one for the clock, one for the gameloop and one for user inputs.
     _ <- forkIO $ writeClock eventQueue
-    _ <- forkIO $ gameloop gameState renderState eventQueue
+    _ <- forkIO $ gameloop gameState renderState eventQueue timeSpeed
     writeUserInput eventQueue
