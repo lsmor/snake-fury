@@ -35,8 +35,7 @@ data AppState = AppState
   deriving (Show, Eq)
 
 -- | our App as a synonym of State monad with AppState as it state
-newtype App a = App {runApp :: State AppState a} 
-  deriving (Functor, Applicative, Monad, MonadState AppState) -- TODO: implement this instances manually
+type App a = State AppState a
 
 
 -- | Calculate the Opposite movement. This is convenient since the snake can't change its movement to the opposite directly
@@ -103,8 +102,8 @@ newApple = do
       else modify' (\s -> s {applePosition = newPoint}) >> return newPoint
 
 -- | The logic of the movement. It updates the state of the game and returns an iterator with changes that should be apply to the renderer
-move :: App [Board.RenderMessage]
-move = do 
+step :: App [Board.RenderMessage]
+step = do 
   -- Notice how clean the logic is:
   --  Move the snake -> 
   --     If collision, send GameOver message;
@@ -121,4 +120,4 @@ move = do
 
 
 runStep :: AppState -> ([Board.RenderMessage], AppState)
-runStep = runState $ runApp move
+runStep = runState step
