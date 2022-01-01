@@ -1,5 +1,5 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiWayIf #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 {-|
 This module defines the logic of the game and the communication with the `Board.RenderState`
@@ -35,7 +35,7 @@ data AppState = AppState
   deriving (Show, Eq)
 
 -- | our App as a synonym of State monad with AppState as it state
-type App a = State AppState a
+type Game a = State AppState a
 
 
 -- | Calculate the Opposite movement. This is convenient since the snake can't change its movement to the opposite directly
@@ -53,7 +53,7 @@ inSnake x0 (SnakeSeq x1 seq) = x0 == x1 || isJust (x0 `S.elemIndexL` seq)
 -- It returns, a triplet (a list of changes :: DeltaBoard, isCollision :: Bool, isEatingApple :: Bool )
 -- and updates the state with the new snake. Notice that we only care about the snake body, not the 
 -- apple or the randomGen
-moveSnake :: App (DeltaBoard, Bool, Bool)
+moveSnake :: MonadState AppState m => m (DeltaBoard, Bool, Bool)
 moveSnake = do
   AppState (SnakeSeq oldHead@(x, y) sb) applePos mov (BoardInfo h w) _ <- get
   let newHead = case mov of
@@ -78,7 +78,7 @@ moveSnake = do
   return (delta, isCollision, isEatingApple)
 
 -- | creates a random point updating the randomGen.
-makeRandomPoint :: App Point
+makeRandomPoint :: MonadState AppState m => m Point
 makeRandomPoint = do
   BoardInfo n i <- gets boardInfo     -- Get the boardInfo and the random generator from the state
   sg            <- gets randomGen
@@ -91,7 +91,7 @@ makeRandomPoint = do
 
 -- | Calculates a new random apple, avoiding creating the apple in the same place, or in the snake body.
 -- It updates the apple position and the randomGen
-newApple :: App Point
+newApple :: MonadState AppState m => m Point
 newApple = do 
   currentApple <- gets applePosition  -- Get the current snake and apple from the state
   currentSnake <- gets snakeSeq
@@ -102,7 +102,7 @@ newApple = do
       else modify' (\s -> s {applePosition = newPoint}) >> return newPoint
 
 -- | The logic of the movement. It updates the state of the game and returns an iterator with changes that should be apply to the renderer
-step :: App [Board.RenderMessage]
+step :: MonadState AppState m => m [Board.RenderMessage]
 step = do 
   -- Notice how clean the logic is:
   --  Move the snake -> 
