@@ -28,7 +28,7 @@ data Movement = North | South | East | West deriving (Show, Eq)
 data SnakeSeq = SnakeSeq {snakeHead :: Point, snakeBody :: Seq Point} deriving (Show, Eq)
 
 -- | The state containing the logic of the game. 
-data AppState = AppState
+data GameState = GameState
   { snakeSeq :: SnakeSeq    -- ^ The snake
   , applePosition :: Point  -- ^ The position of the Apple
   , movement :: Movement    -- ^ The current direction the snake is moving
@@ -37,8 +37,8 @@ data AppState = AppState
   }
   deriving (Show, Eq)
 
--- | our App as a synonym of State monad with AppState as it state
-newtype Game a = Game {runGame :: State AppState a}
+-- | our App as a synonym of State monad with GameState as it state
+newtype Game a = Game {runGame :: State GameState a}
 
 instance Functor Game where
   fmap f (Game s) = Game $ fmap f s
@@ -50,7 +50,7 @@ instance Applicative Game where
 instance Monad Game where
   Game x >>= f = let y = runGame . f <$> x in Game $ join y
 
-instance MonadState AppState Game where
+instance MonadState GameState Game where
   get = Game get
   put s = Game $ put s
 
@@ -69,9 +69,9 @@ inSnake x0 (SnakeSeq x1 seq) = x0 == x1 || isJust (x0 `S.elemIndexL` seq)
 -- It returns, a triplet (a list of changes :: DeltaBoard, isCollision :: Bool, isEatingApple :: Bool )
 -- and updates the state with the new snake. Notice that we only care about the snake body, not the 
 -- apple or the randomGen
-moveSnake :: MonadState AppState m => m (DeltaBoard, Bool, Bool)
+moveSnake :: MonadState GameState m => m (DeltaBoard, Bool, Bool)
 moveSnake = do
-  AppState (SnakeSeq oldHead@(x, y) sb) applePos mov (BoardInfo h w) _ <- get
+  GameState (SnakeSeq oldHead@(x, y) sb) applePos mov (BoardInfo h w) _ <- get
   let newHead = case mov of
             North -> if x - 1 <= 0 then (h, y) else (x - 1, y)
             South -> if x + 1  > h then (1, y) else (x + 1, y)
@@ -94,7 +94,7 @@ moveSnake = do
   return (delta, isCollision, isEatingApple)
 
 -- | creates a random point updating the randomGen.
-makeRandomPoint :: MonadState AppState m => m Point
+makeRandomPoint :: MonadState GameState m => m Point
 makeRandomPoint = do
   BoardInfo n i <- gets boardInfo     -- Get the boardInfo and the random generator from the state
   sg            <- gets randomGen
@@ -107,7 +107,7 @@ makeRandomPoint = do
 
 -- | Calculates a new random apple, avoiding creating the apple in the same place, or in the snake body.
 -- It updates the apple position and the randomGen
-newApple :: MonadState AppState m => m Point
+newApple :: MonadState GameState m => m Point
 newApple = do 
   currentApple <- gets applePosition  -- Get the current snake and apple from the state
   currentSnake <- gets snakeSeq
@@ -118,7 +118,7 @@ newApple = do
       else modify' (\s -> s {applePosition = newPoint}) >> return newPoint
 
 -- | The logic of the movement. It updates the state of the game and returns an iterator with changes that should be apply to the renderer
-step :: MonadState AppState m => m [Board.RenderMessage]
+step :: MonadState GameState m => m [Board.RenderMessage]
 step = do 
   -- Notice how clean the logic is:
   --  Move the snake -> 
@@ -135,5 +135,5 @@ step = do
     | otherwise -> return [Board.RenderBoard delta]
 
 
-runStep :: AppState -> ([Board.RenderMessage], AppState)
+runStep :: GameState -> ([Board.RenderMessage], GameState)
 runStep = runState $ runGame step
