@@ -1,52 +1,93 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 module App where
 
-import EventQueue ( EventQueue (speed), Event, readEvent )
-import RenderState (BoardInfo, Board, RenderMessage, RenderState, render)
-import Snake (AppState)
-import Control.Monad.Reader (ReaderT)
+import EventQueue ( EventQueue (speed), Event (ClockEvent, UserEvent), readEvent, Clock (Tick), calculateSpeed )
+import RenderState (BoardInfo, Board, RenderMessage, RenderState, updateMessages)
+import qualified RenderState
+import Snake (GameState (movement), runStep, opositeMovement)
+import Control.Monad.Reader (ReaderT (runReaderT), MonadReader (ask))
 import Control.Monad.Reader.Class ( MonadReader, asks )
 import Control.Monad.IO.Class ( MonadIO (liftIO) )
 import Data.ByteString.Builder (Builder)
-import Control.Concurrent (readMVar, swapMVar)
-import Control.Monad (void)
+import Control.Concurrent (readMVar, swapMVar, threadDelay)
+import Control.Monad (void, forever)
 import qualified Data.ByteString.Builder as B
 import System.IO (stdout)
+import Data.Kind (Type)
+import Control.Monad.State.Class (MonadState, gets, modify', get, put)
+import Control.Monad.Trans (lift)
+import Control.Monad.State.Strict (runState, StateT (runStateT), evalState, evalStateT)
 
 
-data Config = Config {boardInfo :: BoardInfo, initialTime :: Int}
+data Config   = Config {boardInfo :: BoardInfo, initialTime :: Int}
+data AppState = AppState {gameState :: GameState, renderState :: RenderState}
 
-data Env = Env {config :: Config, queue :: EventQueue, renderState :: RenderState }
+data Env = Env {config :: Config, queue :: EventQueue}
 
 newtype AppT m a = AppT {runApp :: ReaderT Env m a}  -- TODO: Write about GeneralizedNewtypeDeriving
   deriving (Functor, Applicative, Monad, MonadReader Env, MonadIO)
 
-class MonadClock m where
-    setSpeed :: Int -> m ()
-    getSpeed :: m Int
+type App = AppT (StateT AppState IO)
 
-class MonadEvent m where
-    getEvent :: m Event
+class MonadQueue m where
+  getEvent :: m Event
+  setSpeed :: Int -> m ()
+  getSpeed :: m Int
 
 class MonadRender m where
-    render' :: m ()
+  updateRenderState :: [RenderMessage] -> m ()
+  render :: m ()
+  
+instance MonadState AppState m => MonadState AppState (AppT m) where
+  get = AppT get
+  put s = AppT $ put s
 
-instance MonadIO m => MonadClock (AppT m) where
+instance MonadIO m => MonadQueue (AppT m) where
   setSpeed i = do
     v <- asks (speed . queue)
     liftIO $ void $ swapMVar v i
-  getSpeed = do 
+  getSpeed = do
     v <- asks (speed . queue)
     liftIO $ readMVar v
-
-instance MonadIO m => MonadEvent (AppT m) where
   getEvent = do
     q <- asks queue
     liftIO $ readEvent q
 
-instance MonadIO m => MonadRender (AppT m) where
-  render' = do
-    r <- asks renderState
-    liftIO $ B.hPutBuilder stdout $ render r
-    
-  
+instance (MonadIO m, MonadState AppState m) => MonadRender (AppT m) where
+  updateRenderState msgs = do
+    r <- gets renderState
+    let r' = updateMessages r msgs
+    modify' $ \s -> s {renderState = r'}
+  render = do
+    r <- gets renderState
+    liftIO $ putStr "\ESC[2J"
+    liftIO $ B.hPutBuilder stdout $ RenderState.toBuilder r
+
+-- | Given the app state, the render state and the event queue, updates everything in one time step, then execute again.
+gameloop :: (MonadState AppState m, MonadReader Env m, MonadIO m, MonadQueue m, MonadRender m) => m ()
+gameloop = forever $ do
+    AppState gState rState <- get
+    env                    <- ask
+    currentSpeed           <- liftIO $ readMVar $ speed (queue env)
+    let newSpeed = calculateSpeed (RenderState.score rState) (initialTime . config $ env) currentSpeed
+    liftIO $ swapMVar (speed $ queue env) newSpeed
+    liftIO $ threadDelay newSpeed
+    event  <- getEvent
+    let (deltas,gState') =                                              -- based in the type of the event, updates the state
+          case event of                                              -- and produces the messages neccesary for update the rendering
+                ClockEvent Tick ->  Snake.runStep gState
+                UserEvent move ->
+                  if Snake.movement gState == Snake.opositeMovement move
+                    then Snake.runStep gState 
+                    else Snake.runStep $ gState {Snake.movement = move}
+    updateRenderState deltas
+    render
+    modify' $ \s -> s {gameState = gState'}
+
+run :: AppState -> Env -> IO ()
+run initialState env = flip evalStateT initialState $ flip runReaderT env $ runApp gameloop 
+

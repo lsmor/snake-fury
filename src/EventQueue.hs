@@ -61,13 +61,19 @@ writeUserInput queue@(EventQueue _ userqueue _) = do
       "\ESC[B" -> tryWriteChan userqueue Snake.South >> writeUserInput queue
       _   -> writeUserInput queue
 
+
+-- | Given the current score, updates the global shared speed every 10 points by a factor of 10%. Returns the current state
+calculateSpeed :: Int -> Int -> Int ->  Int
+calculateSpeed score initialSpeed currentSpeed =
+    let level = min score 50 `quot` 10              -- maximun of 5 levels every 10 apples
+        speedFactor = 1 - fromIntegral level / 10.0 -- every level speeds up the time by a 10%
+     in floor @Double $ fromIntegral initialSpeed * speedFactor
+
 -- | Given the current score, updates the global shared speed every 10 points by a factor of 10%. Returns the current state
 writeSpeed :: Int -> Int -> EventQueue -> IO Int
 writeSpeed score initialSpeed queue = do
     currentSpeed <- readMVar $ speed queue
-    let level = min score 50 `quot` 10              -- maximun of 5 levels every 10 apples
-        speedFactor = 1 - fromIntegral level / 10.0 -- every level speeds up the time by a 10%
-        newSpeed  = floor @Double $ fromIntegral initialSpeed * speedFactor
+    let newSpeed = calculateSpeed score initialSpeed currentSpeed
     if currentSpeed == newSpeed
       then return currentSpeed
       else swapMVar (speed queue) newSpeed >> return newSpeed

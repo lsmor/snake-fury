@@ -8,19 +8,15 @@ import System.Random ( getStdGen, randomRIO )
 import qualified Data.Sequence as S
 import System.Environment (getArgs)
 import Control.Concurrent
-    ( forkIO, newEmptyMVar, threadDelay, newMVar )
-import System.IO (stdin, hSetBuffering, BufferMode (NoBuffering), hSetEcho, stdout)
+    ( forkIO, newEmptyMVar, newMVar )
+import System.IO (stdin, hSetBuffering, BufferMode (NoBuffering), hSetEcho)
 import Control.Concurrent.BoundedChan
     ( newBoundedChan )
-import qualified Data.ByteString.Builder as B
 import EventQueue
-    ( readEvent,
-      writeClock,
-      writeSpeed,
+    ( writeClock,
       writeUserInput,
-      Clock(Tick),
-      Event(UserEvent, ClockEvent),
       EventQueue(EventQueue) )
+import App (AppState (AppState), run, Env (..), Config (..))
 
 -- | Produces a random point. Use for game initialization, random point generation is done purely within Snake module.
 getRandomPoint :: Int -> Int -> IO Board.Point
@@ -35,7 +31,7 @@ inititalizePoints h w = do
     else return (snakeInit, appleInit)
 
 -- | given the initial parameters height, width and initial time, It creates the initial state, the initial render state and the event queue
-gameInitialization :: Int -> Int -> Int -> IO (Snake.AppState, Board.RenderState , EventQueue)
+gameInitialization :: Int -> Int -> Int -> IO (Snake.GameState, Board.RenderState , EventQueue)
 gameInitialization hight width initialspeed = do
   (snakeInit, appleInit) <- inititalizePoints hight width
   sg <- getStdGen
@@ -43,28 +39,10 @@ gameInitialization hight width initialspeed = do
   newClock <- newEmptyMVar
   newSpeed <- newMVar initialspeed
   let binf = BoardInfo hight width
-      gameState = Snake.AppState (Snake.SnakeSeq snakeInit S.Empty) appleInit Snake.North binf sg
+      gameState = Snake.GameState (Snake.SnakeSeq snakeInit S.Empty) appleInit Snake.North binf sg
       renderState = Board.buildInitialBoard binf snakeInit appleInit
       eventQueue = EventQueue newClock newUserEventQueue newSpeed
   return (gameState, renderState, eventQueue)
-
--- | Given the app state, the render state and the event queue, updates everything in one time step, then execute again.
-gameloop :: Snake.AppState -> Board.RenderState -> EventQueue -> Int -> IO ()
-gameloop app b queue initialSpeed =  do
-    currentSpeed <- writeSpeed (Board.score b) initialSpeed  queue                 -- Update speed based in the score
-    threadDelay currentSpeed                                         -- waits for the time specify in the global speed
-    event <- readEvent queue                                         -- Read the next event in the queue
-    let (deltas,app') =                                              -- based in the type of the event, updates the state
-          case event of                                              -- and produces the messages neccesary for update the rendering
-                ClockEvent Tick ->  Snake.runStep app
-                UserEvent move ->
-                  if Snake.movement app == Snake.opositeMovement move
-                    then Snake.runStep app 
-                    else Snake.runStep $ app {Snake.movement = move}
-    let board' = b `Board.updateMessages` deltas                     -- udpate the RenderState
-    putStr "\ESC[2J"                                                 -- clean the state and print out the new render state
-    B.hPutBuilder stdout $ Board.render board'
-    gameloop app' board' queue initialSpeed                                      -- re-execute the game loop with the updated state.
 
 -- | main.
 main :: IO ()
@@ -79,5 +57,8 @@ main = do
 
     -- Game Loop. We run three different threads, one for the clock, one for the gameloop and one for user inputs.
     _ <- forkIO $ writeClock eventQueue
-    _ <- forkIO $ gameloop gameState renderState eventQueue timeSpeed
-    writeUserInput eventQueue
+    _ <- forkIO $ writeUserInput eventQueue
+    let initialState = AppState gameState renderState
+    let cfg = Config (BoardInfo h w) timeSpeed
+    let env = Env cfg eventQueue
+    run initialState env

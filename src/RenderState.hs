@@ -84,8 +84,8 @@ ppCell Apple     = "X "
 
 
 -- | Transform the RenderState into a Builder
-render :: RenderState -> Builder
-render (RenderState b binf@(BoardInfo h w) gOver s) =
+toBuilder :: RenderState -> Builder
+toBuilder (RenderState b binf@(BoardInfo h w) gOver s) =
   if gOver
     then ppScore s <> fst (boardToString $ emptyGrid binf)
     else ppScore s <> fst (boardToString b)
