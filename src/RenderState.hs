@@ -1,5 +1,7 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE ViewPatterns #-}
 
 
 {-|
@@ -18,12 +20,19 @@ import Data.ByteString.Builder (Builder)
 type Point = (Int, Int)
 
 -- | There are 4 type of CellType. Each CellType is drawn differently.
-data CellType 
-  = Empty
-  | Snake
-  | SnakeHead 
-  | Apple 
-  deriving (Show, Eq)
+type CellType  = Builder 
+
+pattern Empty :: CellType
+pattern Empty <- (\b -> B.toLazyByteString b == "· "  -> True) where Empty = "· "
+pattern Snake :: CellType
+pattern Snake <- (\b -> B.toLazyByteString b == "0 "  -> True) where Snake = "0 "
+pattern SnakeHead :: CellType
+pattern SnakeHead <- (\b -> B.toLazyByteString b == "$ "  -> True) where SnakeHead = "$ "
+pattern Apple :: CellType
+pattern Apple <- (\b -> B.toLazyByteString b == "X "  -> True) where Apple = "X "
+{-# COMPLETE Empty, Snake, SnakeHead, Apple #-}
+
+-- ^-- At compile time CellType is treated as a ADT Empty | Snake | SnakeHead | Apple but at run time it is just a Builder
 
 -- | The height and width of the board
 data BoardInfo = BoardInfo {height :: Int, width :: Int} deriving (Show, Eq)
@@ -75,14 +84,6 @@ ppScore n =
   "Score: " <> B.intDec n  <> "\n" <>
   "----------\n"
 
--- | Pretty printer of cell
-ppCell :: CellType -> Builder
-ppCell Empty     = "· "
-ppCell Snake     = "0 "
-ppCell SnakeHead = "$ "
-ppCell Apple     = "X "
-
-
 -- | Transform the RenderState into a Builder
 toBuilder :: RenderState -> Builder
 toBuilder (RenderState b binf@(BoardInfo h w) gOver s) =
@@ -93,5 +94,5 @@ toBuilder (RenderState b binf@(BoardInfo h w) gOver s) =
     boardToString =  foldl' fprint (mempty, 0)
     fprint (!s, !i) cell =
       if ((i + 1) `mod` w) == 0
-        then (s <> ppCell cell <> B.charUtf8 '\n', i + 1 )
-        else (s <> ppCell cell , i + 1)
+        then (s <> cell <> B.charUtf8 '\n', i + 1 )
+        else (s <> cell , i + 1)
