@@ -41,7 +41,7 @@ class MonadQueue m where
 class MonadRender m where
   updateRenderState :: [RenderMessage] -> m ()
   render :: m ()
-  
+
 instance MonadState AppState m => MonadState AppState (AppT m) where
   get = AppT get
   put s = AppT $ put s
@@ -71,23 +71,23 @@ instance (MonadIO m, MonadState AppState m) => MonadRender (AppT m) where
 gameloop :: (MonadState AppState m, MonadReader Env m, MonadIO m, MonadQueue m, MonadRender m) => m ()
 gameloop = forever $ do
     AppState gState rState <- get
-    env                    <- ask
-    currentSpeed           <- liftIO $ readMVar $ speed (queue env)
-    let newSpeed = calculateSpeed (RenderState.score rState) (initialTime . config $ env) currentSpeed
-    liftIO $ swapMVar (speed $ queue env) newSpeed
+    iTime         <- asks $ initialTime . config
+    currentSpeed  <- getSpeed
+    let newSpeed = calculateSpeed (RenderState.score rState) iTime currentSpeed
+    setSpeed newSpeed
     liftIO $ threadDelay newSpeed
     event  <- getEvent
-    let (deltas,gState') =                                              -- based in the type of the event, updates the state
+    let (deltas,gState') =                                           -- based in the type of the event, updates the state
           case event of                                              -- and produces the messages neccesary for update the rendering
                 ClockEvent Tick ->  Snake.runStep gState
                 UserEvent move ->
                   if Snake.movement gState == Snake.opositeMovement move
-                    then Snake.runStep gState 
+                    then Snake.runStep gState
                     else Snake.runStep $ gState {Snake.movement = move}
     updateRenderState deltas
     render
     modify' $ \s -> s {gameState = gState'}
 
 run :: AppState -> Env -> IO ()
-run initialState env = flip evalStateT initialState $ flip runReaderT env $ runApp gameloop 
+run initialState env = flip evalStateT initialState $ flip runReaderT env $ runApp gameloop
 
