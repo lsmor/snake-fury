@@ -34,6 +34,9 @@ dependencies:
 default-extensions:
 - StrictData
 
+default-extensions:
+- StrictData
+
 library:
   source-dirs: src
 
@@ -51,7 +54,6 @@ executables:
     main:                snake-gui.hs
     source-dirs:         app
     ghc-options:
-    - -threaded
     - -rtsopts
     - -Wall
     dependencies:

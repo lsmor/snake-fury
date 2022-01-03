@@ -58,7 +58,7 @@ executable snake-gui
       app
   default-extensions:
       StrictData
-  ghc-options: -threaded -rtsopts -Wall
+  ghc-options: -rtsopts -Wall
   build-depends:
       BoundedChan
     , array
