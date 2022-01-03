@@ -64,8 +64,7 @@ instance (MonadIO m, MonadState AppState m) => MonadRender (AppT m) where
     modify' $ \s -> s {renderState = r'}
   render = do
     r <- gets renderState
-    liftIO $ putStr "\ESC[2J"
-    liftIO $ B.hPutBuilder stdout $ RenderState.toBuilder r
+    liftIO $ putStr "\ESC[2J" >> B.hPutBuilder stdout (RenderState.toBuilder r)
 
 -- | Given the app state, the render state and the event queue, updates everything in one time step, then execute again.
 gameloop :: (MonadState AppState m, MonadReader Env m, MonadIO m, MonadQueue m, MonadRender m) => m ()

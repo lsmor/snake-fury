@@ -39,6 +39,7 @@ executables:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
+    - -threaded
     - -rtsopts
     - -Wall
     dependencies:

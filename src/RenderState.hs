@@ -94,5 +94,5 @@ toBuilder (RenderState b binf@(BoardInfo h w) gOver s) =
     boardToString =  foldl' fprint (mempty, 0)
     fprint (!s, !i) cell =
       if ((i + 1) `mod` w) == 0
-        then (s <> cell <> B.charUtf8 '\n', i + 1 )
+        then (s <> cell <> B.char8 '\n', i + 1 )
         else (s <> cell , i + 1)

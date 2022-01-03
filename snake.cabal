@@ -53,7 +53,7 @@ executable snake-exe
       app
   default-extensions:
       StrictData
-  ghc-options: -rtsopts -Wall
+  ghc-options: -threaded -rtsopts -Wall
   build-depends:
       BoundedChan
     , array
