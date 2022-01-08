@@ -9,7 +9,7 @@ import qualified Data.Sequence as S
 import System.Environment (getArgs)
 import Control.Concurrent
     ( forkIO, newEmptyMVar, newMVar )
-import System.IO (stdin, hSetBuffering, BufferMode (NoBuffering), hSetEcho)
+import System.IO (stdin, hSetBuffering, BufferMode (NoBuffering, BlockBuffering), hSetEcho, stdout, hSetBinaryMode, hGetBuffering)
 import Control.Concurrent.BoundedChan
     ( newBoundedChan )
 import EventQueue
@@ -50,7 +50,10 @@ main = do
     -- enable reading key strokes
     hSetBuffering stdin NoBuffering
     hSetEcho stdin False
-    
+
+    hSetBuffering stdout NoBuffering
+    hSetBinaryMode stdout True
+
     -- Game Initializacion
     [h, w, timeSpeed] <- fmap read <$> getArgs
     (gameState, renderState, eventQueue) <- gameInitialization h w timeSpeed
