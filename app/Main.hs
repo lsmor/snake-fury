@@ -9,7 +9,7 @@ import qualified Data.Sequence as S
 import System.Environment (getArgs)
 import Control.Concurrent
     ( forkIO, newEmptyMVar, newMVar )
-import System.IO (stdin, hSetBuffering, BufferMode (NoBuffering, BlockBuffering), hSetEcho, stdout, hSetBinaryMode, hGetBuffering)
+import System.IO (stdin, hSetBuffering, BufferMode (NoBuffering), hSetEcho, stdout, hSetBinaryMode)
 import Control.Concurrent.BoundedChan
     ( newBoundedChan )
 import EventQueue
