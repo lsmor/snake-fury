@@ -27,6 +27,8 @@ dependencies:
 - BoundedChan
 - bytestring
 - mtl
+- sdl2
+- linear
 
 default-extensions:
 - StrictData
@@ -37,6 +39,15 @@ library:
 executables:
   snake-exe:
     main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -Wall
+    dependencies:
+    - snake
+  snake-gui:
+    main:                snake-gui.hs
     source-dirs:         app
     ghc-options:
     - -threaded
