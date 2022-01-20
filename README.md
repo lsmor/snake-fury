@@ -26,7 +26,7 @@ At the moment there are no exercises prepared, but if you are interested there a
 
 **v1.XX are the versions using monads**
 - v1.1 uses the State monad to refactor the game logic step, leading to clearer version of the same logic (arguably, snake is simple enough to use just pure functions, but you are here to learn monads!). 
-- v1.2, v1.3, v1.4 uses the so called [three layer of Haskell pattern](https://www.parsonsmatt.org/2018/03/22/three_layer_haskell_cake.html) to ~~overengineer~~ make the application not dependent on the concrete implementation, but to abstractions. 
+- v1.2, v1.3, v1.4 uses the so called [three layer of Haskell pattern](https://www.parsonsmatt.org/2018/03/22/three_layer_haskell_cake.html) to ~~overengineer~~ make the application not dependent on the concrete implementation, but on abstractions. 
 - v1.5 is the same as v0.5. If you have reached here, you might be interested in cheking it out!
 
 ## What this repo is *NOT*
