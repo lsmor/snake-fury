@@ -1,6 +1,8 @@
 # Haskell's snake challenge.
 
-**This is a work in progress. The last commit is not reliable. If you want to compile, use one of the tags** . The idea of this repo is to provide a learning path for Haskell via writing a simple but complex enough program: The Snake Game in the Console. The approach is the following:
+**This is a work in progress. The last commit is not reliable. If you want to compile, use one of the tags** . 
+
+The idea of this repo is to provide a learning path for Haskell via writing a simple but complex enough program: The Snake Game in the Console. The approach is the following:
 
 The same game is written twice. First, it is written using no monads (read below), all game logic is done with pure functions. Then, the code is refactored to use monads. The idea of this approach is to light away the darkness around monads: The challenger has the opportunity to see with its own eyes how monads lead to cleaner and more ergonomic code.
 
