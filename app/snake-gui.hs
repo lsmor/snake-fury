@@ -3,15 +3,28 @@ module Main where
 
 import SDL
 import Linear (V4(..))
-import Control.Monad (unless)
+import Control.Monad (unless, void)
+import Control.Monad.IO.Class (MonadIO)
+import Data.Text (Text)
+
+withWindow :: MonadIO m => WindowConfig -> Text -> (Window -> m a) -> m ()
+withWindow cfg title io = do 
+  w <- createWindow title cfg 
+  showWindow w
+  void $ io w 
+  destroyWindow w
+
+withRenderer :: MonadIO m => RendererConfig -> Window -> (Renderer -> m a) -> m ()
+withRenderer cfg window io = do
+  renderer <- createRenderer window (-1) cfg 
+  void $ io renderer
+  destroyRenderer renderer
 
 main :: IO ()
 main = do
   initializeAll
-  window <- createWindow "My SDL Application" defaultWindow
-  renderer <- createRenderer window (-1) defaultRenderer
-  appLoop renderer
-  destroyWindow window
+  withWindow defaultWindow "My SDL Application" $ \w -> 
+    withRenderer defaultRenderer w appLoop
 
 appLoop :: Renderer -> IO ()
 appLoop renderer = do

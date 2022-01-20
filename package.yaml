@@ -29,6 +29,7 @@ dependencies:
 - mtl
 - sdl2
 - linear
+- text
 
 default-extensions:
 - StrictData
