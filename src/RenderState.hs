@@ -23,7 +23,7 @@ type Point = (Int, Int)
 type CellType  = Builder 
 
 pattern Empty :: CellType
-pattern Empty <- (\b -> B.toLazyByteString b == "· "  -> True) where Empty = "· "
+pattern Empty <- (\b -> B.toLazyByteString b == "\194\183 "  -> True) where Empty = "· "
 pattern Snake :: CellType
 pattern Snake <- (\b -> B.toLazyByteString b == "0 "  -> True) where Snake = "0 "
 pattern SnakeHead :: CellType

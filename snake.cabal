@@ -27,6 +27,7 @@ library
   exposed-modules:
       App
       EventQueue
+      GUI
       RenderState
       Snake
   other-modules:
@@ -48,8 +49,8 @@ library
     , text
   default-language: Haskell2010
 
-executable snake-exe
-  main-is: Main.hs
+executable snake-gui
+  main-is: snake-gui.hs
   other-modules:
       Paths_snake
   hs-source-dirs:
@@ -71,10 +72,9 @@ executable snake-exe
     , text
   default-language: Haskell2010
 
-executable snake-gui
-  main-is: snake-gui.hs
+executable snake-tui
+  main-is: snake-tui.hs
   other-modules:
-      Main
       Paths_snake
   hs-source-dirs:
       app

@@ -1,42 +1,38 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import SDL
-import Linear (V4(..))
-import Control.Monad (unless, void)
-import Control.Monad.IO.Class (MonadIO)
-import Data.Text (Text)
+import GUI ( renderBoardSDL, withRenderer, withWindow )
+import qualified SDL
+import qualified RenderState as R
+import Control.Monad.IO.Class (MonadIO ())
+import Control.Monad (unless)
 
-withWindow :: MonadIO m => WindowConfig -> Text -> (Window -> m a) -> m ()
-withWindow cfg title io = do 
-  w <- createWindow title cfg 
-  showWindow w
-  void $ io w 
-  destroyWindow w
 
-withRenderer :: MonadIO m => RendererConfig -> Window -> (Renderer -> m a) -> m ()
-withRenderer cfg window io = do
-  renderer <- createRenderer window (-1) cfg 
-  void $ io renderer
-  destroyRenderer renderer
+
+appLoop :: MonadIO m => SDL.Window -> SDL.Renderer  -> m ()
+appLoop w renderer = do
+  let bInfo = R.BoardInfo 5 5
+      initB = R.buildInitialBoard bInfo (1,1) (3, 2)
+
+  events <- SDL.pollEvents
+  let eventIsQPress event =
+        case SDL.eventPayload event of
+          SDL.QuitEvent -> True
+          SDL.KeyboardEvent keyboardEvent ->
+            SDL.keyboardEventKeyMotion keyboardEvent == SDL.Pressed &&
+            SDL.keysymKeycode (SDL.keyboardEventKeysym keyboardEvent) == SDL.KeycodeQ
+          _ -> False
+      qPressed = any eventIsQPress events
+
+  renderBoardSDL w renderer initB
+
+  SDL.delay 100
+
+  unless qPressed (appLoop w renderer)
+
 
 main :: IO ()
 main = do
-  initializeAll
-  withWindow defaultWindow "My SDL Application" $ \w -> 
-    withRenderer defaultRenderer w appLoop
-
-appLoop :: Renderer -> IO ()
-appLoop renderer = do
-  events <- pollEvents
-  let eventIsQPress event =
-        case eventPayload event of
-          KeyboardEvent keyboardEvent ->
-            keyboardEventKeyMotion keyboardEvent == Pressed &&
-            keysymKeycode (keyboardEventKeysym keyboardEvent) == KeycodeQ
-          _ -> False
-      qPressed = any eventIsQPress events
-  rendererDrawColor renderer $= V4 0 0 255 255
-  clear renderer
-  present renderer
-  unless qPressed (appLoop renderer)
+  SDL.initializeAll
+  withWindow (SDL.defaultWindow {SDL.windowResizable = True}) "My SDL Application" $ \w -> do
+    withRenderer SDL.defaultRenderer w (appLoop w)

@@ -38,8 +38,8 @@ library:
   source-dirs: src
 
 executables:
-  snake-exe:
-    main:                Main.hs
+  snake-tui:
+    main:                snake-tui.hs
     source-dirs:         app
     ghc-options:
     - -threaded
