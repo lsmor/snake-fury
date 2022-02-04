@@ -7,7 +7,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 module App where
 
-import EventQueue ( EventQueue (speed, clock, EventQueue), Event (ClockEvent, UserEvent), readEvent, Clock (Tick), calculateSpeed, writeClock )
+import EventQueue ( EventQueue (speed, clock, EventQueue), Event (ClockEvent, UserEvent), Clock (Tick), calculateSpeed, writeClock )
 import RenderState (BoardInfo, Board, RenderMessage, RenderState, updateMessages)
 import qualified RenderState
 import Snake (GameState (movement), runStep, opositeMovement, Movement)
@@ -23,7 +23,8 @@ import Data.Kind (Type)
 import Control.Monad.State.Class (MonadState, gets, modify', get, put)
 import Control.Monad.Trans (lift)
 import Control.Monad.State.Strict (runState, StateT (runStateT), evalState, evalStateT)
-import Control.Concurrent.BoundedChan (tryWriteChan)
+import Control.Concurrent.BoundedChan (tryWriteChan, tryReadChan)
+import qualified TUI
 
 
 data Config   = Config {boardInfo :: BoardInfo, initialTime :: Int}
@@ -56,8 +57,11 @@ instance (MonadIO m, MonadReader Env m) => MonadQueue m where
     v <- asks (speed . queue)
     liftIO $ readMVar v
   pullEvent = do
-    q <- asks queue
-    liftIO $ readEvent q
+    EventQueue clockQueue userQueue _ <- asks queue
+    mv <- liftIO $ tryReadChan userQueue
+    case mv of
+      Nothing   -> liftIO $ ClockEvent <$> readMVar clockQueue
+      Just move -> return $ UserEvent move
 
 instance (MonadIO m, MonadState AppState m) => MonadRender (AppT m) where
   updateRenderState msgs = do
@@ -66,7 +70,7 @@ instance (MonadIO m, MonadState AppState m) => MonadRender (AppT m) where
     modify' $ \s -> s {renderState = r'}
   render = do
     r <- gets renderState
-    liftIO $ B.hPutBuilder stdout "\ESC[2J" >> B.hPutBuilder stdout (RenderState.toBuilder r)
+    liftIO $ B.hPutBuilder stdout "\ESC[2J" >> B.hPutBuilder stdout (TUI.toBuilder r)
 
 -- | Given the app state, the render state and the event queue, updates everything in one time step, then execute again.
 gameloop :: (MonadState AppState m, MonadReader Env m, MonadIO m, MonadQueue m, MonadRender m) => m ()

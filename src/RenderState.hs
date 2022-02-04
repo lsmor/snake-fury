@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns #-}
+
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ViewPatterns #-}
@@ -76,23 +76,3 @@ updateRenderState (RenderState b binf gOver s) message =
 -- | extends `updateRenderState` to handle a list of messages
 updateMessages :: RenderState -> [RenderMessage] -> RenderState
 updateMessages = foldl' updateRenderState
-
--- | Pretry printer Score
-ppScore :: Int -> Builder
-ppScore n = 
-  "----------\n" <>
-  "Score: " <> B.intDec n  <> "\n" <>
-  "----------\n"
-
--- | Transform the RenderState into a Builder
-toBuilder :: RenderState -> Builder
-toBuilder (RenderState b binf@(BoardInfo h w) gOver s) =
-  if gOver
-    then ppScore s <> fst (boardToString $ emptyGrid binf)
-    else ppScore s <> fst (boardToString b)
-  where
-    boardToString =  foldl' fprint (mempty, 0)
-    fprint (!s, !i) cell =
-      if ((i + 1) `mod` w) == 0
-        then (s <> cell <> B.charUtf8 '\n', i + 1 )
-        else (s <> cell , i + 1)

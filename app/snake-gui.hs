@@ -34,5 +34,5 @@ appLoop w renderer = do
 main :: IO ()
 main = do
   SDL.initializeAll
-  withWindow (SDL.defaultWindow {SDL.windowResizable = True}) "My SDL Application" $ \w -> do
+  withWindow SDL.defaultWindow "Snake Fury" $ \w -> do
     withRenderer SDL.defaultRenderer w (appLoop w)

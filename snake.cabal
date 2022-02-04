@@ -30,6 +30,7 @@ library
       GUI
       RenderState
       Snake
+      TUI
   other-modules:
       Paths_snake
   hs-source-dirs:

@@ -17,18 +17,27 @@ import Foreign.C.Types (CInt)
 import Data.Foldable (forM_)
 import Data.Array (assocs)
 
+-- Defined colors
+
+-- Apple color
 red :: V4 Word8
 red   = V4 200 30 30 0
+
+-- Snake head color
 blue :: V4 Word8
 blue  = V4 30 30 200 0
+
+-- Snake body color
 green :: V4 Word8
 green = V4 30 200 30 0
+
+-- background color
 black :: V4 Word8
 black = V4 0 0 0 0
+
+-- grid color
 white :: V4 Word8
 white = V4 255 255 255 0
-
-
 
 mkRect :: a -> a -> a -> a-> SDL.Rectangle a
 mkRect x y w h = SDL.Rectangle o z
@@ -70,7 +79,7 @@ renderBoardSDL window renderer (R.RenderState ar (BoardInfo i j) b n) = do
       case cell of
           R.Empty -> do
               SDL.rendererDrawColor renderer $= white
-              SDL.drawRect renderer (Just $ r)
+              SDL.drawRect renderer (Just r)
           R.SnakeHead -> drawGrid blue  r renderer
           R.Snake     -> drawGrid green r renderer
           R.Apple     -> drawGrid red   r renderer
