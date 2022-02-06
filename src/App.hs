@@ -24,7 +24,6 @@ import Control.Monad.State.Class (MonadState, gets, modify', get, put)
 import Control.Monad.Trans (lift)
 import Control.Monad.State.Strict (runState, StateT (runStateT), evalState, evalStateT)
 import Control.Concurrent.BoundedChan (tryWriteChan, tryReadChan)
-import qualified TUI
 
 
 data Config   = Config {boardInfo :: BoardInfo, initialTime :: Int}
@@ -34,7 +33,6 @@ data Env = Env {config :: Config, queue :: EventQueue}
 newtype AppT m a = AppT {runApp :: ReaderT Env m a}  -- TODO: Write about GeneralizedNewtypeDeriving
   deriving (Functor, Applicative, Monad, MonadReader Env, MonadIO)
 
-type App = AppT (StateT AppState IO)
 
 class MonadQueue m where
   pullEvent :: m Event
@@ -63,17 +61,9 @@ instance (MonadIO m, MonadReader Env m) => MonadQueue m where
       Nothing   -> liftIO $ ClockEvent <$> readMVar clockQueue
       Just move -> return $ UserEvent move
 
-instance (MonadIO m, MonadState AppState m) => MonadRender (AppT m) where
-  updateRenderState msgs = do
-    r <- gets renderState
-    let r' = updateMessages r msgs
-    modify' $ \s -> s {renderState = r'}
-  render = do
-    r <- gets renderState
-    liftIO $ B.hPutBuilder stdout "\ESC[2J" >> B.hPutBuilder stdout (TUI.toBuilder r)
 
 -- | Given the app state, the render state and the event queue, updates everything in one time step, then execute again.
-gameloop :: (MonadState AppState m, MonadReader Env m, MonadIO m, MonadQueue m, MonadRender m) => m ()
+gameloop :: (MonadIO m, MonadReader Env m, MonadState AppState m, MonadQueue m, MonadRender m) => m ()
 gameloop = forever $ do
     AppState gState rState <- get
     iTime         <- asks $ initialTime . config
@@ -93,6 +83,5 @@ gameloop = forever $ do
     render
     modify' $ \s -> s {gameState = gState'}
 
-run :: AppState -> Env -> IO ()
-run initialState env = flip evalStateT initialState $ flip runReaderT env $ runApp gameloop
+
 

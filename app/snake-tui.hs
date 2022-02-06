@@ -1,4 +1,3 @@
-
 module Main where
 
 import qualified RenderState as Board
@@ -15,8 +14,8 @@ import Control.Concurrent.BoundedChan
 import EventQueue
     ( writeClock,
       EventQueue(EventQueue) )
-import App (AppState (AppState), run, Env (..), Config (..))
-import TUI (writeUserInput)
+import App (AppState (AppState), Env (..), Config (..))
+import TUI (writeUserInput, run)
 
 -- | Produces a random point. Use for game initialization, random point generation is done purely within Snake module.
 getRandomPoint :: Int -> Int -> IO Board.Point

@@ -1,5 +1,11 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+
+{-# LANGUAGE MonoLocalBinds #-}
 
 module TUI where
 
@@ -8,11 +14,16 @@ module TUI where
 import EventQueue (EventQueue (EventQueue))
 import qualified Snake
 import Control.Concurrent.BoundedChan (tryWriteChan)
-import System.IO (hReady, stdin)
+import System.IO (hReady, stdin, stdout)
 import qualified Data.ByteString.Builder as B
 import Data.ByteString.Builder (Builder)
-import RenderState (RenderState (RenderState), BoardInfo (BoardInfo), emptyGrid)
+import RenderState (RenderState (RenderState), BoardInfo (BoardInfo), emptyGrid, updateMessages)
 import Data.Foldable (foldl')
+import Control.Monad.State (StateT, MonadState, gets, modify', evalStateT)
+import App (AppState (renderState), AppT (runApp), MonadRender (updateRenderState, render), Env, gameloop, MonadQueue)
+import Control.Monad.IO.Class (MonadIO (liftIO))
+import Control.Monad.Reader
+    ( MonadIO(..), ReaderT(runReaderT), MonadReader )
 
 
 -- # User Inputs
@@ -45,7 +56,7 @@ writeUserInput queue@(EventQueue _ userqueue _) = do
 
 -- | Pretry printer Score
 ppScore :: Int -> Builder
-ppScore n = 
+ppScore n =
   "----------\n" <>
   "Score: " <> B.intDec n  <> "\n" <>
   "----------\n"
@@ -62,3 +73,22 @@ toBuilder (RenderState b binf@(BoardInfo h w) gOver s) =
       if ((i + 1) `mod` w) == 0
         then (s <> cell <> B.charUtf8 '\n', i + 1 )
         else (s <> cell , i + 1)
+
+
+-- Defining TUI
+newtype Tui a = Tui { runTui :: AppT (StateT AppState IO) a }
+  deriving (Functor, Applicative, Monad, MonadReader Env, MonadIO, MonadState AppState)
+
+-- How is renderer in the terminal.
+instance MonadRender Tui where
+  updateRenderState msgs = do
+    r <- gets renderState
+    let r' = updateMessages r msgs
+    modify' $ \s -> s {renderState = r'}
+  render = do
+    r <- gets renderState
+    liftIO $ B.hPutBuilder stdout "\ESC[2J" >> B.hPutBuilder stdout (toBuilder r)
+
+
+run :: AppState -> Env -> IO ()
+run initialState env = flip evalStateT initialState . flip runReaderT env . runApp . runTui $ gameloop
