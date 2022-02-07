@@ -60,8 +60,8 @@ withRenderer cfg window io = do
   return r
 
 
-drawGrid :: MonadIO m => V4 Word8 -> SDL.Rectangle CInt -> SDL.Renderer -> m ()
-drawGrid col r renderer  = do
+drawCell :: MonadIO m => V4 Word8 -> SDL.Rectangle CInt -> SDL.Renderer -> m ()
+drawCell col r renderer  = do
   SDL.rendererDrawColor renderer $= col
   SDL.fillRect renderer (Just r)
 
@@ -80,9 +80,9 @@ renderBoardSDL window renderer (R.RenderState ar (BoardInfo i j) b n) = do
           R.Empty -> do
               SDL.rendererDrawColor renderer $= white
               SDL.drawRect renderer (Just r)
-          R.SnakeHead -> drawGrid blue  r renderer
-          R.Snake     -> drawGrid green r renderer
-          R.Apple     -> drawGrid red   r renderer
+          R.SnakeHead -> drawCell blue  r renderer
+          R.Snake     -> drawCell green r renderer
+          R.Apple     -> drawCell red   r renderer
       
-    SDL.rendererDrawColor renderer $= black      
+    SDL.rendererDrawColor renderer $= black
     SDL.present renderer
