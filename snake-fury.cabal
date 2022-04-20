@@ -1,19 +1,14 @@
-cabal-version: 1.12
-
--- This file has been generated from package.yaml by hpack version 0.34.4.
---
--- see: https://github.com/sol/hpack
-
-name:           snake
+name:           snake-fury
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/snake#readme>
-homepage:       https://github.com/githubuser/snake#readme
-bug-reports:    https://github.com/githubuser/snake/issues
-author:         Author name here
+description:    Please see the README on GitHub at <https://github.com/lsmor/snake-fury#readme>
+homepage:       https://github.com/lsmor/snake-fury#readme
+bug-reports:    https://github.com/lsmor/snake-fury/issues
+author:         Luis Morillo Najarro
 maintainer:     example@example.com
-copyright:      2021 Author name here
+copyright:      2021 Luis Morillo Najarro
 license:        BSD3
 license-file:   LICENSE
+cabal-version:  1.12
 build-type:     Simple
 extra-source-files:
     README.md
@@ -21,7 +16,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/snake
+  location: https://github.com/lsmor/snake-fury
 
 library
   exposed-modules:
@@ -32,51 +27,43 @@ library
       Snake
       TUI
   other-modules:
-      Paths_snake
+      Paths_snake_fury
   hs-source-dirs:
       src
   default-extensions:
       StrictData
   build-depends:
-      BoundedChan
-    , array
-    , base >=4.7 && <5
-    , bytestring
-    , containers
-    , linear
-    , mtl
-    , random
-    , sdl2
-    , text
+      BoundedChan >= 1.0.3.0
+    , array >= 0.5.4.0
+    , base >=4.14
+    , bytestring >= 0.10.12.0
+    , containers >= 0.6.5.1
+    , linear >= 1.21.6
+    , mtl >= 2.2.2
+    , random >= 1.2.0
+    , sdl2 >= 2.5.3.0
+    , text >= 1.2
   default-language: Haskell2010
 
 executable snake-gui
   main-is: snake-gui.hs
   other-modules:
-      Paths_snake
+      Paths_snake_fury
   hs-source-dirs:
       app
   default-extensions:
       StrictData
   ghc-options: -rtsopts -Wall
   build-depends:
-      BoundedChan
-    , array
-    , base >=4.7 && <5
-    , bytestring
-    , containers
-    , linear
-    , mtl
-    , random
-    , sdl2
-    , snake
-    , text
+      snake-fury
+    , base >=4.14
+    , sdl2 >= 2.5.3.0
   default-language: Haskell2010
 
 executable snake-tui
   main-is: snake-tui.hs
   other-modules:
-      Paths_snake
+      Paths_snake_fury
   hs-source-dirs:
       app
   default-extensions:
@@ -92,7 +79,7 @@ executable snake-tui
     , mtl
     , random
     , sdl2
-    , snake
+    , snake-fury
     , text
   default-language: Haskell2010
 
@@ -100,7 +87,7 @@ test-suite snake-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_snake
+      Paths_snake_fury
   hs-source-dirs:
       test
   default-extensions:
@@ -116,6 +103,6 @@ test-suite snake-test
     , mtl
     , random
     , sdl2
-    , snake
+    , snake-fury
     , text
   default-language: Haskell2010
