@@ -72,13 +72,14 @@ gameloop = forever $ do
     when (currentSpeed /= newSpeed) (setSpeed newSpeed)
     liftIO $ threadDelay newSpeed
     event  <- pullEvent
-    let (deltas,gState') =                                           -- based in the type of the event, updates the state
-          case event of                                              -- and produces the messages neccesary for update the rendering
-                ClockEvent Tick ->  Snake.runStep gState
-                UserEvent move ->
-                  if Snake.movement gState == Snake.opositeMovement move
-                    then Snake.runStep gState
-                    else Snake.runStep $ gState {Snake.movement = move}
+    let 
+      (deltas,gState') =                                           -- based in the type of the event, updates the state
+        case event of                                              -- and produces the messages neccesary for update the rendering
+          ClockEvent Tick ->  Snake.runStep gState
+          UserEvent move ->
+            if Snake.movement gState == Snake.opositeMovement move
+              then Snake.runStep gState
+              else Snake.runStep $ gState {Snake.movement = move}
     updateRenderState deltas
     render
     modify' $ \s -> s {gameState = gState'}
