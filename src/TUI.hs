@@ -20,39 +20,42 @@ import Data.ByteString.Builder (Builder)
 import RenderState (RenderState (RenderState), BoardInfo (BoardInfo), emptyGrid, updateMessages)
 import Data.Foldable (foldl')
 import Control.Monad.State (StateT, MonadState, gets, modify', evalStateT)
-import App (AppState (renderState), AppT (runApp), MonadRender (updateRenderState, render), Env, gameloop)
+import App (AppState (renderState), AppT (runApp), MonadRender (updateRenderState, render), gameloop, Config, HasConfig (getConfig), HasEventQueue (getQueue))
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Reader
     ( MonadIO(..), ReaderT(runReaderT), MonadReader )
 
+{-
+In order to make something running within the App monad we need to provide 
+  - An environment with a configuracion and an EventQueue
+    · Make instances of HasConfig and HasEventQueue
+  - A rendering function
+    · Make an instance of MonadRender
 
--- # User Inputs
+We need also an external service which pushes events into the EventQueue
+This services is runned asynchronously in a different thread than Logic
 
--- In StackOverflow we trust.
-getKey :: IO [Char]
-getKey = reverse <$> getKey' ""
-  where getKey' chars = do
-          char <- getChar
-          more <- hReady stdin
-          (if more then getKey' else return) (char:chars)
-
--- | This function translate key strokes to movements and push then into the queue. 
--- The player is free to push keys as fast a he/she can but the userqueue is bounded,
--- meaning that if we push a movement to a filled queue it gets discarded.
--- This is intented for the game play, If we press keys faster than the game speed
--- they will be enqueued and pushed into the game with delay. 
-writeUserInput :: EventQueue -> IO ()
-writeUserInput queue@(EventQueue userqueue _) = do
-    c <- getKey
-    case c of
-      "\ESC[A" -> tryWriteChan userqueue Snake.North >> writeUserInput queue -- \ESC[A/D/C/B are the escape codes for the arrow keys.
-      "\ESC[D" -> tryWriteChan userqueue Snake.West  >> writeUserInput queue
-      "\ESC[C" -> tryWriteChan userqueue Snake.East  >> writeUserInput queue
-      "\ESC[B" -> tryWriteChan userqueue Snake.South >> writeUserInput queue
-      _   -> writeUserInput queue
+-}
 
 
--- # Rendering
+-- |---------------|
+-- |- Environment -|
+-- |---------------|
+
+-- | The environment for TUI version of snake
+data Env = Env Config EventQueue
+
+-- The instances necesary to work within the App Monad
+instance HasConfig Env where
+  getConfig (Env con _) = con
+
+instance HasEventQueue Env where
+  getQueue (Env _ q) = q
+
+
+-- |-------------|
+-- |- Rendering -|
+-- |-------------|
 
 -- | Pretry printer Score
 ppScore :: Int -> Builder
@@ -90,5 +93,34 @@ instance MonadRender Tui where
     liftIO $ B.hPutBuilder stdout "\ESC[2J" >> B.hPutBuilder stdout (toBuilder r)
 
 
+-- |---------------|
+-- |- User Inputs -|
+-- |---------------|
+
+-- In StackOverflow we trust.
+getKey :: IO [Char]
+getKey = reverse <$> getKey' ""
+  where getKey' chars = do
+          char <- getChar
+          more <- hReady stdin
+          (if more then getKey' else return) (char:chars)
+
+-- | This function translate key strokes to movements and push then into the queue. 
+-- The player is free to push keys as fast a he/she can but the userqueue is bounded,
+-- meaning that if we push a movement to a filled queue it gets discarded.
+-- This is intented for the game play, If we press keys faster than the game speed
+-- they will be enqueued and pushed into the game with delay. 
+writeUserInput :: EventQueue -> IO ()
+writeUserInput queue@(EventQueue userqueue _) = do
+    c <- getKey
+    case c of
+      "\ESC[A" -> tryWriteChan userqueue Snake.North >> writeUserInput queue -- \ESC[A/D/C/B are the escape codes for the arrow keys.
+      "\ESC[D" -> tryWriteChan userqueue Snake.West  >> writeUserInput queue
+      "\ESC[C" -> tryWriteChan userqueue Snake.East  >> writeUserInput queue
+      "\ESC[B" -> tryWriteChan userqueue Snake.South >> writeUserInput queue
+      _   -> writeUserInput queue
+
+
+-- | Given an initial AppState and an Env, it initializes the gameloop
 run :: AppState -> Env -> IO ()
 run initialState env = flip evalStateT initialState . flip runReaderT env . runApp . runTui $ gameloop

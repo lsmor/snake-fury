@@ -13,8 +13,8 @@ import Control.Concurrent.BoundedChan
     ( newBoundedChan )
 import EventQueue
     ( EventQueue(EventQueue) )
-import App (AppState (AppState), Env (..), Config (..))
-import TUI (writeUserInput, run)
+import App (AppState (AppState), Config (..))
+import TUI (writeUserInput, run, Env (..))
 
 -- | Produces a random point. Use for game initialization, random point generation is done purely within Snake module.
 getRandomPoint :: Int -> Int -> IO Board.Point

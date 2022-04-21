@@ -20,14 +20,14 @@ import Control.Monad (void, forever, when)
 import Control.Monad.State.Class (MonadState, modify', get)
 import Control.Concurrent.BoundedChan (tryReadChan)
 
-data Config   = Config {boardInfo :: BoardInfo, initialTime :: Int}
+{-
+The bare minimum to run the application is having a GameState and a RenderState.
+Then some function which retrives events, and functions for updating the render state
+-}
+
+
 data AppState = AppState {gameState :: GameState, renderState :: RenderState}
-data Env      = Env {config :: Config, queue :: EventQueue}
-
-newtype AppT e m a = AppT {runApp :: ReaderT e m a}  -- TODO: Write about GeneralizedNewtypeDeriving
-  deriving (Functor, Applicative, Monad, MonadReader e, MonadIO)
-
-deriving instance MonadState AppState m => MonadState AppState (AppT e m)
+data Config   = Config {boardInfo :: BoardInfo, initialTime :: Int}
 
 class MonadQueue m where
   pullEvent :: m Event
@@ -38,15 +38,35 @@ class MonadRender m where
   updateRenderState :: [RenderMessage] -> m ()
   render :: m ()
 
-instance (MonadIO m, MonadReader Env m) => MonadQueue m where
+
+
+
+
+
+
+
+
+newtype AppT e m a = AppT {runApp :: ReaderT e m a}
+  deriving (Functor, Applicative, Monad, MonadReader e, MonadIO)
+
+deriving instance MonadState AppState m => MonadState AppState (AppT e m)
+
+class HasConfig env where
+  getConfig :: env -> Config
+
+class HasEventQueue env where
+  getQueue :: env -> EventQueue
+
+
+instance (MonadIO m, MonadReader e m, HasEventQueue e) => MonadQueue m where
   setSpeed i = do
-    v <- asks (speed . queue)
+    v <- asks (speed . getQueue)
     liftIO $ void $ swapMVar v i
   getSpeed = do
-    v <- asks (speed . queue)
+    v <- asks (speed . getQueue)
     liftIO $ readMVar v
   pullEvent = do
-    EventQueue userQueue _ <- asks queue
+    EventQueue userQueue _ <- asks getQueue
     mv <- liftIO $ tryReadChan userQueue
     case mv of
       Nothing   -> return Tick
@@ -54,10 +74,10 @@ instance (MonadIO m, MonadReader Env m) => MonadQueue m where
 
 
 -- | Given the app state, the render state and the event queue, updates everything in one time step, then execute again.
-gameloop :: (MonadIO m, MonadReader Env m, MonadState AppState m, MonadQueue m, MonadRender m) => m ()
+gameloop :: (MonadIO m, MonadReader e m, HasConfig e, MonadState AppState m, MonadQueue m, MonadRender m) => m ()
 gameloop = forever $ do
     AppState gState rState <- get
-    iTime         <- asks $ initialTime . config
+    iTime         <- asks $ initialTime . getConfig
     currentSpeed  <- getSpeed
     let newSpeed = calculateSpeed (RenderState.score rState) iTime
     when (currentSpeed /= newSpeed) (setSpeed newSpeed)
