@@ -42,7 +42,7 @@ getKey = reverse <$> getKey' ""
 -- This is intented for the game play, If we press keys faster than the game speed
 -- they will be enqueued and pushed into the game with delay. 
 writeUserInput :: EventQueue -> IO ()
-writeUserInput queue@(EventQueue _ userqueue _) = do
+writeUserInput queue@(EventQueue userqueue _) = do
     c <- getKey
     case c of
       "\ESC[A" -> tryWriteChan userqueue Snake.North >> writeUserInput queue -- \ESC[A/D/C/B are the escape codes for the arrow keys.
@@ -76,7 +76,7 @@ toBuilder (RenderState b binf@(BoardInfo h w) gOver s) =
 
 
 -- Defining TUI
-newtype Tui a = Tui { runTui :: AppT (StateT AppState IO) a }
+newtype Tui a = Tui { runTui :: AppT Env (StateT AppState IO) a }
   deriving (Functor, Applicative, Monad, MonadReader Env, MonadIO, MonadState AppState)
 
 -- How is renderer in the terminal.

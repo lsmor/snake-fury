@@ -24,27 +24,20 @@ import qualified Data.ByteString.Builder as B
 -- type TimeQueue = MVar Event which is not precise because events may be also user inputs, and we want to keep to different queues
 -- One for the time and one for the user key strokes. In haskell we want precise types even if they look useless.
 
--- | The clock/time is represented by a single bit called Tick. 
-data Clock = Tick
-
 -- | The are two kind of events, a `ClockEvent`, representing movement which is not force by the user input, and `UserEvent` which is the opposite.
-data Event = ClockEvent Clock | UserEvent Snake.Movement
+data Event = Tick | UserEvent Snake.Movement
 
 -- | the `UserInputQueue` is an asynchronous bounded channel which contains snake movements. This channel is feeded by key strokes
 type UserInputQueue = BoundedChan Snake.Movement
 
--- | The `TimeQueue` is a mutable variable which contains a Tick. This queue is feeded at constant time. 
-type TimeQueue = MVar Clock
-
 -- | The `EventQueue` has a `TimeQueue` a `UserInputQueue` and the global speed of consumption. The speed is represented by the current speed
-data EventQueue = EventQueue {clock :: TimeQueue, userInput :: UserInputQueue, speed :: MVar Int}
-
+data EventQueue = EventQueue {userInput :: UserInputQueue, speed :: MVar Int}
 
 -- | Given the EventQueue feed the time queue at the speed determine by the global speed. Notice by desing this function blocks if the time queue
 -- has a Tick already. This is usefull because we don't know if the next movement is going to be a user event of a clock event. So we need a function
 -- which keeps the queue filled. 
-writeClock :: EventQueue -> IO ()
-writeClock  queue@(EventQueue clockQueue _ globalSpeed) = readMVar globalSpeed >>= threadDelay >> putMVar clockQueue Tick >> writeClock queue
+-- writeClock :: EventQueue -> IO ()
+-- writeClock  queue@(EventQueue clockQueue _ globalSpeed) = readMVar globalSpeed >>= threadDelay >> putMVar clockQueue Tick >> writeClock queue
 
 
 -- | Given the current score, updates the global shared speed every 10 points by a factor of 10%. Returns the current state

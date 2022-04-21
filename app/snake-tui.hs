@@ -12,8 +12,7 @@ import System.IO (stdin, hSetBuffering, BufferMode (NoBuffering), hSetEcho, stdo
 import Control.Concurrent.BoundedChan
     ( newBoundedChan )
 import EventQueue
-    ( writeClock,
-      EventQueue(EventQueue) )
+    ( EventQueue(EventQueue) )
 import App (AppState (AppState), Env (..), Config (..))
 import TUI (writeUserInput, run)
 
@@ -35,12 +34,11 @@ gameInitialization hight width initialspeed = do
   (snakeInit, appleInit) <- inititalizePoints hight width
   sg <- getStdGen
   newUserEventQueue <- newBoundedChan 3
-  newClock <- newEmptyMVar
   newSpeed <- newMVar initialspeed
   let binf = BoardInfo hight width
       gameState = Snake.GameState (Snake.SnakeSeq snakeInit S.Empty) appleInit Snake.North binf sg
       renderState = Board.buildInitialBoard binf snakeInit appleInit
-      eventQueue = EventQueue newClock newUserEventQueue newSpeed
+      eventQueue = EventQueue newUserEventQueue newSpeed
   return (gameState, renderState, eventQueue)
 
 -- | main.
@@ -58,7 +56,6 @@ main = do
     (gameState, renderState, eventQueue) <- gameInitialization h w timeSpeed
 
     -- Game Loop. We run three different threads, one for the clock, one for the gameloop and one for user inputs.
-    _ <- forkIO $ writeClock eventQueue
     _ <- forkIO $ writeUserInput eventQueue
     let initialState = AppState gameState renderState
     let cfg = Config (BoardInfo h w) timeSpeed
