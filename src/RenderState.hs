@@ -9,10 +9,8 @@ This module defines the board and the score. It includes not only the rendering 
 -}
 module RenderState where
 
-import Data.Array ( (//), listArray, Array, elems )
-import Control.Monad ( foldM_ )
+import Data.Array ( (//), listArray, Array )
 import Data.Foldable ( foldl' )
-import Debug.Trace(trace)
 import qualified Data.ByteString.Builder as B
 import Data.ByteString.Builder (Builder)
 

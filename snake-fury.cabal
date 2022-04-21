@@ -30,6 +30,7 @@ library
       Paths_snake_fury
   hs-source-dirs:
       src
+  ghc-options: -rtsopts -Wall
   default-extensions:
       StrictData
   build-depends:
@@ -53,7 +54,7 @@ executable snake-gui
       app
   default-extensions:
       StrictData
-  ghc-options: -rtsopts -Wall
+  ghc-options: -rtsopts -Wall -Wunused-imports
   build-depends:
       snake-fury
     , base >=4.14

@@ -7,7 +7,7 @@ import System.Random ( getStdGen, randomRIO )
 import qualified Data.Sequence as S
 import System.Environment (getArgs)
 import Control.Concurrent
-    ( forkIO, newEmptyMVar, newMVar )
+    ( forkIO, newMVar )
 import System.IO (stdin, hSetBuffering, BufferMode (NoBuffering), hSetEcho, stdout, hSetBinaryMode)
 import Control.Concurrent.BoundedChan
     ( newBoundedChan )

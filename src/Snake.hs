@@ -11,11 +11,10 @@ import RenderState (BoardInfo (..), Point, DeltaBoard)
 import qualified RenderState as Board
 import Data.Sequence ( Seq(..))
 import qualified Data.Sequence as S
-import System.Random ( uniformR, RandomGen(split), StdGen, Random (randomR) )
+import System.Random ( uniformR, RandomGen(split), StdGen )
 import Data.Maybe (isJust)
 import Control.Monad.State.Strict
-    ( StateT(StateT), MonadState(get), gets, modify', State, runState )
-import Debug.Trace (trace)
+    ( MonadState(get), gets, modify', State, runState )
 import Control.Monad (join)
 import Control.Monad.State.Class (put)
 
@@ -63,7 +62,7 @@ opositeMovement West = East
 
 -- | Check if a point is in the snake
 inSnake :: Point -> SnakeSeq  -> Bool
-inSnake x0 (SnakeSeq x1 seq) = x0 == x1 || isJust (x0 `S.elemIndexL` seq)
+inSnake x0 (SnakeSeq x1 body) = x0 == x1 || isJust (x0 `S.elemIndexL` body)
 
 -- | Calculates the new snake considering the board limit, the toroidal topology and the apple.
 -- It returns, a triplet (a list of changes :: DeltaBoard, isCollision :: Bool, isEatingApple :: Bool )
@@ -88,8 +87,8 @@ moveSnake = do
         False ->
           case sb of            -- The new snake body -|                  The changes on the board -|
             S.Empty          -> (SnakeSeq newHead                S.empty, [(newHead, Board.SnakeHead), (oldHead, Board.Empty)                  ])
-            x :<| S.Empty    -> (SnakeSeq newHead  (S.singleton oldHead), [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (x, Board.Empty)])
-            x :<| (xs :|> t) -> (SnakeSeq newHead (oldHead :<| x :<| xs), [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (t, Board.Empty)])
+            a :<| S.Empty    -> (SnakeSeq newHead  (S.singleton oldHead), [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (a, Board.Empty)])
+            a :<| (xs :|> t) -> (SnakeSeq newHead (oldHead :<| a :<| xs), [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (t, Board.Empty)])
   modify' $ \s -> s {snakeSeq = newSnake}
   return (delta, isCollision, isEatingApple)
 

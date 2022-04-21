@@ -20,8 +20,8 @@ import Data.ByteString.Builder (Builder)
 import RenderState (RenderState (RenderState), BoardInfo (BoardInfo), emptyGrid, updateMessages)
 import Data.Foldable (foldl')
 import Control.Monad.State (StateT, MonadState, gets, modify', evalStateT)
-import App (AppState (renderState), AppT (runApp), MonadRender (updateRenderState, render), Env, gameloop, MonadQueue)
-import Control.Monad.IO.Class (MonadIO (liftIO))
+import App (AppState (renderState), AppT (runApp), MonadRender (updateRenderState, render), Env, gameloop)
+import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Reader
     ( MonadIO(..), ReaderT(runReaderT), MonadReader )
 
@@ -63,16 +63,16 @@ ppScore n =
 
 -- | Transform the RenderState into a Builder
 toBuilder :: RenderState -> Builder
-toBuilder (RenderState b binf@(BoardInfo h w) gOver s) =
+toBuilder (RenderState b binf@(BoardInfo _ w) gOver s) =
   if gOver
     then ppScore s <> fst (boardToString $ emptyGrid binf)
     else ppScore s <> fst (boardToString b)
   where
     boardToString =  foldl' fprint (mempty, 0)
-    fprint (!s, !i) cell =
+    fprint (!acc, !i) cell =
       if ((i + 1) `mod` w) == 0
-        then (s <> cell <> B.charUtf8 '\n', i + 1 )
-        else (s <> cell , i + 1)
+        then (acc <> cell <> B.charUtf8 '\n', i + 1 )
+        else (acc <> cell , i + 1)
 
 
 -- Defining TUI

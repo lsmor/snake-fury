@@ -9,22 +9,16 @@
 module App where
 
 import EventQueue ( EventQueue (speed, EventQueue), Event (Tick, UserEvent), calculateSpeed)
-import RenderState (BoardInfo, Board, RenderMessage, RenderState, updateMessages)
+import RenderState (BoardInfo, RenderMessage, RenderState)
 import qualified RenderState
-import Snake (GameState (movement), runStep, opositeMovement, Movement)
-import Control.Monad.Reader (ReaderT (runReaderT), MonadReader (ask))
-import Control.Monad.Reader.Class ( MonadReader, asks )
+import Snake (GameState (movement), runStep, opositeMovement)
+import Control.Monad.Reader (ReaderT, MonadReader )
+import Control.Monad.Reader.Class ( asks )
 import Control.Monad.IO.Class ( MonadIO (liftIO) )
-import Data.ByteString.Builder (Builder)
 import Control.Concurrent (readMVar, swapMVar, threadDelay)
 import Control.Monad (void, forever, when)
-import qualified Data.ByteString.Builder as B
-import System.IO (stdout)
-import Data.Kind (Type)
-import Control.Monad.State.Class (MonadState, gets, modify', get, put)
-import Control.Monad.Trans (lift)
-import Control.Monad.State.Strict (runState, StateT (runStateT), evalState, evalStateT)
-import Control.Concurrent.BoundedChan (tryWriteChan, tryReadChan)
+import Control.Monad.State.Class (MonadState, modify', get)
+import Control.Concurrent.BoundedChan (tryReadChan)
 
 data Config   = Config {boardInfo :: BoardInfo, initialTime :: Int}
 data AppState = AppState {gameState :: GameState, renderState :: RenderState}
@@ -65,7 +59,7 @@ gameloop = forever $ do
     AppState gState rState <- get
     iTime         <- asks $ initialTime . config
     currentSpeed  <- getSpeed
-    let newSpeed = calculateSpeed (RenderState.score rState) iTime currentSpeed
+    let newSpeed = calculateSpeed (RenderState.score rState) iTime
     when (currentSpeed /= newSpeed) (setSpeed newSpeed)
     liftIO $ threadDelay newSpeed
     event  <- pullEvent
