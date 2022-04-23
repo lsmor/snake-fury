@@ -17,7 +17,7 @@ import Control.Concurrent.BoundedChan (tryWriteChan)
 import System.IO (hReady, stdin, stdout)
 import qualified Data.ByteString.Builder as B
 import Data.ByteString.Builder (Builder)
-import RenderState (RenderState (RenderState), BoardInfo (BoardInfo), emptyGrid, updateMessages)
+import RenderState (RenderState (RenderState), BoardInfo (BoardInfo), emptyGrid, updateMessages, CellType (Apple, SnakeHead, Snake, Empty))
 import Data.Foldable (foldl')
 import Control.Monad.State (StateT, MonadState, gets, modify', evalStateT)
 import App (AppState (renderState), AppT (runApp), MonadRender (updateRenderState, render), gameloop, Config, HasConfig (getConfig), HasEventQueue (getQueue))
@@ -57,6 +57,12 @@ instance HasEventQueue Env where
 -- |- Rendering -|
 -- |-------------|
 
+cellToBuilder :: CellType -> Builder 
+cellToBuilder Empty = "· "
+cellToBuilder Snake = "0 "
+cellToBuilder SnakeHead = "$ "
+cellToBuilder Apple = "X "
+
 -- | Pretry printer Score
 ppScore :: Int -> Builder
 ppScore n =
@@ -74,8 +80,8 @@ toBuilder (RenderState b binf@(BoardInfo _ w) gOver s) =
     boardToString =  foldl' fprint (mempty, 0)
     fprint (!acc, !i) cell =
       if ((i + 1) `mod` w) == 0
-        then (acc <> cell <> B.charUtf8 '\n', i + 1 )
-        else (acc <> cell , i + 1)
+        then (acc <> cellToBuilder cell <> B.charUtf8 '\n', i + 1 )
+        else (acc <> cellToBuilder cell , i + 1)
 
 
 -- Defining TUI
