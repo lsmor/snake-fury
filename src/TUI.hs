@@ -17,10 +17,10 @@ import Control.Concurrent.BoundedChan (tryWriteChan)
 import System.IO (hReady, stdin, stdout)
 import qualified Data.ByteString.Builder as B
 import Data.ByteString.Builder (Builder)
-import RenderState (RenderState (RenderState), BoardInfo (BoardInfo), emptyGrid, updateMessages, CellType (Apple, SnakeHead, Snake, Empty))
+import RenderState (RenderState (RenderState), BoardInfo (BoardInfo), emptyGrid, CellType (Apple, SnakeHead, Snake, Empty))
 import Data.Foldable (foldl')
-import Control.Monad.State (StateT, MonadState, gets, modify', evalStateT)
-import App (AppState (renderState), AppT (runApp), MonadRender (updateRenderState, render), gameloop, Config, HasConfig (getConfig), HasEventQueue (getQueue))
+import Control.Monad.State (StateT, MonadState, gets, evalStateT)
+import App (AppState (renderState), AppT (runApp), MonadRender (render), gameloop, Config, HasConfig (getConfig), HasEventQueue (getQueue))
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Reader
     ( MonadIO(..), ReaderT(runReaderT), MonadReader )
@@ -83,22 +83,6 @@ toBuilder (RenderState b binf@(BoardInfo _ w) gOver s) =
         then (acc <> cellToBuilder cell <> B.charUtf8 '\n', i + 1 )
         else (acc <> cellToBuilder cell , i + 1)
 
-
--- Defining TUI
-newtype Tui a = Tui { runTui :: AppT Env (StateT AppState IO) a }
-  deriving (Functor, Applicative, Monad, MonadReader Env, MonadIO, MonadState AppState)
-
--- How is renderer in the terminal.
-instance MonadRender Tui where
-  updateRenderState msgs = do
-    r <- gets renderState
-    let r' = updateMessages r msgs
-    modify' $ \s -> s {renderState = r'}
-  render = do
-    r <- gets renderState
-    liftIO $ B.hPutBuilder stdout "\ESC[2J" >> B.hPutBuilder stdout (toBuilder r)
-
-
 -- |---------------|
 -- |- User Inputs -|
 -- |---------------|
@@ -125,6 +109,21 @@ writeUserInput queue@(EventQueue userqueue _) = do
       "\ESC[C" -> tryWriteChan userqueue Snake.East  >> writeUserInput queue
       "\ESC[B" -> tryWriteChan userqueue Snake.South >> writeUserInput queue
       _   -> writeUserInput queue
+
+
+-- -------------
+-- |- Tui App -|
+-- -------------
+
+-- Defining TUI
+newtype Tui a = Tui { runTui :: AppT Env (StateT AppState IO) a }
+  deriving (Functor, Applicative, Monad, MonadReader Env, MonadIO, MonadState AppState)
+
+-- How is renderer in the terminal.
+instance MonadRender Tui where
+  render = do
+    r <- gets renderState
+    liftIO $ B.hPutBuilder stdout "\ESC[2J" >> B.hPutBuilder stdout (toBuilder r)
 
 
 -- | Given an initial AppState and an Env, it initializes the gameloop

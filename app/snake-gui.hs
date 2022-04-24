@@ -22,7 +22,7 @@ appLoop w renderer = do
             SDL.keyboardEventKeyMotion keyboardEvent == SDL.Pressed &&
             SDL.keysymKeycode (SDL.keyboardEventKeysym keyboardEvent) == SDL.KeycodeQ
           _ -> False
-      qPressed = any eventIsQPress events
+  let qPressed = any eventIsQPress events
 
   renderBoardSDL w renderer initB
 
