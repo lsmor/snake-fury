@@ -1,7 +1,5 @@
 
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE PatternSynonyms #-}
-{-# LANGUAGE ViewPatterns #-}
 
 
 {-|
@@ -11,14 +9,12 @@ module RenderState where
 
 import Data.Array ( (//), listArray, Array )
 import Data.Foldable ( foldl' )
-import qualified Data.ByteString.Builder as B
-import Data.ByteString.Builder (Builder)
 
 -- | a Point is a pair of Ints
 type Point = (Int, Int)
 
 -- | There are 4 type of CellType. Each CellType is drawn differently.
-data CellType = Empty | Snake | SnakeHead | Apple 
+data CellType = Empty | Snake | SnakeHead | Apple
 
 -- | The height and width of the board
 data BoardInfo = BoardInfo {height :: Int, width :: Int} deriving (Show, Eq)

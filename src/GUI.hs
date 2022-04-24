@@ -4,14 +4,13 @@
 module GUI where
 
 import qualified SDL
-import Control.Monad (unless, void)
-import Control.Monad.IO.Class (MonadIO (liftIO))
+import Control.Monad (void)
+import Control.Monad.IO.Class (MonadIO)
 import Data.Text (Text)
 import qualified RenderState as R
-import RenderState (emptyGrid, BoardInfo (BoardInfo))
+import RenderState (BoardInfo (BoardInfo))
 import Linear
 import SDL (($=))
-import Control.Concurrent (threadDelay)
 import Data.Word (Word8)
 import Foreign.C.Types (CInt)
 import Data.Foldable (forM_)

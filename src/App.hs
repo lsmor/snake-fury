@@ -17,39 +17,44 @@ import Control.Monad.Reader.Class ( asks )
 import Control.Monad.IO.Class ( MonadIO (liftIO) )
 import Control.Concurrent (readMVar, swapMVar, threadDelay)
 import Control.Monad (void, forever, when)
-import Control.Monad.State.Class (MonadState, modify', get)
+import Control.Monad.State.Class (MonadState, modify', get, gets)
 import Control.Concurrent.BoundedChan (tryReadChan)
 
 {-
-The bare minimum to run the application is having a GameState and a RenderState.
-Then some function which retrives events, and functions for updating the render state
+The bare minimum to run an application's step is having a GameState and a RenderState.
+Then some function which retrives events, and functions for updating the render state.
+Notice the model below can be run in pure code if we'd like to, because there are no
+dependencies on MonadIO or mutable state.
 -}
 
 
 data AppState = AppState {gameState :: GameState, renderState :: RenderState}
 data Config   = Config {boardInfo :: BoardInfo, initialTime :: Int}
 
-class MonadQueue m where
+class Monad m => MonadQueue m where
   pullEvent :: m Event
   setSpeed :: Int -> m ()
   getSpeed :: m Int
 
-class MonadRender m where
+class Monad m => MonadGame m where
+  updateGameState :: Event -> m [RenderMessage]
   updateRenderState :: [RenderMessage] -> m ()
+
+class Monad m => MonadRender m where
   render :: m ()
 
+gameStep :: (MonadQueue m, MonadGame m, MonadRender m) => m ()
+gameStep = pullEvent 
+       >>= updateGameState
+       >>= updateRenderState 
+       >>  render
 
 
-
-
-
-
-
-
-newtype AppT e m a = AppT {runApp :: ReaderT e m a}
-  deriving (Functor, Applicative, Monad, MonadReader e, MonadIO)
-
-deriving instance MonadState AppState m => MonadState AppState (AppT e m)
+{-
+If we want to run something meaningfull, we need access to the configuration and 
+to Some EventQueue via read only environment. Also, we can implement now some common
+instances for MonadQueue and MonadGame
+-}
 
 class HasConfig env where
   getConfig :: env -> Config
@@ -57,8 +62,7 @@ class HasConfig env where
 class HasEventQueue env where
   getQueue :: env -> EventQueue
 
-
-instance (MonadIO m, MonadReader e m, HasEventQueue e) => MonadQueue m where
+instance (Monad m, MonadIO m, MonadReader e m, HasEventQueue e) => MonadQueue m where
   setSpeed i = do
     v <- asks (speed . getQueue)
     liftIO $ void $ swapMVar v i
@@ -72,28 +76,56 @@ instance (MonadIO m, MonadReader e m, HasEventQueue e) => MonadQueue m where
       Nothing   -> return Tick
       Just move -> return $ UserEvent move
 
+instance (Monad m, MonadState AppState m) => MonadGame m where
+  updateGameState e = do
+    current_state <- gets gameState
+    let (mgs, new_state) =
+         case e of 
+          Tick -> Snake.runStep current_state   -- If it is a tick, just run a step
+          UserEvent move ->                     -- If it is user event, modify the current direction acoordingly and run a step
+            if Snake.movement current_state == Snake.opositeMovement move
+              then Snake.runStep current_state
+              else Snake.runStep $ current_state {Snake.movement = move}
+    modify'$ \s -> s {gameState = new_state}
+    return mgs
+  
+  updateRenderState msgs = do
+    r <- gets renderState
+    let r' = RenderState.updateMessages r msgs
+    modify' $ \s -> s {renderState = r'}
+
+{-
+Now we can define a proper type which has everything wire together. 
+The type below is the classic ReaderT app.
+-}
+
+newtype AppT e m a = AppT {runApp :: ReaderT e m a}
+  deriving (Functor, Applicative, Monad, MonadReader e, MonadIO)
+
+deriving instance MonadState AppState m => MonadState AppState (AppT e m)
+
+  
+updateQueueTime :: (MonadState AppState m, MonadReader e m, HasConfig e, MonadQueue m) => m Int
+updateQueueTime = do
+    AppState _ rState <- get
+    init_time         <- asks $ initialTime . getConfig
+    current_speed  <- getSpeed
+    let new_speed = calculateSpeed (RenderState.score rState) init_time
+    when (current_speed /= new_speed) (setSpeed new_speed)
+    return new_speed
+
 
 -- | Given the app state, the render state and the event queue, updates everything in one time step, then execute again.
-gameloop :: (MonadIO m, MonadReader e m, HasConfig e, MonadState AppState m, MonadQueue m, MonadRender m) => m ()
+gameloop :: ( MonadIO m
+            , MonadReader e m
+            , HasConfig e
+            , MonadState AppState m
+            , MonadQueue m
+            , MonadRender m
+            , MonadGame m) => m ()
 gameloop = forever $ do
-    AppState gState rState <- get
-    iTime         <- asks $ initialTime . getConfig
-    currentSpeed  <- getSpeed
-    let newSpeed = calculateSpeed (RenderState.score rState) iTime
-    when (currentSpeed /= newSpeed) (setSpeed newSpeed)
-    liftIO $ threadDelay newSpeed
-    event  <- pullEvent
-    let 
-      (deltas,gState') =                                           -- based in the type of the event, updates the state
-        case event of                                              -- and produces the messages neccesary for update the rendering
-          Tick           ->  Snake.runStep gState
-          UserEvent move ->
-            if Snake.movement gState == Snake.opositeMovement move
-              then Snake.runStep gState
-              else Snake.runStep $ gState {Snake.movement = move}
-    updateRenderState deltas
-    render
-    modify' $ \s -> s {gameState = gState'}
-
+    new_speed <- updateQueueTime
+    liftIO $ threadDelay new_speed
+    gameStep
 
 
