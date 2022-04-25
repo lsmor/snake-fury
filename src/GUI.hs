@@ -112,8 +112,7 @@ getGraphicDevices (Env _ _ win ren) = (win, ren)
 -- |-------------|
 
 renderBoardSDL :: MonadIO m => SDL.Window -> SDL.Renderer -> R.RenderState  -> m ()
---                                                |- Todo SDL usa los ejes x / y intercambiados a nuestra TUI
-renderBoardSDL window renderer (R.RenderState ar (BoardInfo board_width board_height) game_over current_score) = do
+renderBoardSDL window renderer (R.RenderState ar (BoardInfo board_height board_width) game_over current_score) = do
     SDL.clear renderer                  -- initialize sdl's render backbuffer
     V2 window_width window_height <- SDL.get $ SDL.windowSize window
     let xSize = window_width `quot` fromIntegral board_width   -- Size of the squares of the grid. Essentially, divide the
