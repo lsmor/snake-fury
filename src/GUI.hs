@@ -1,29 +1,35 @@
 {-# LANGUAGE PatternSynonyms #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleContexts #-}
 module GUI where
 
 import qualified SDL
-import Control.Monad (void)
-import Control.Monad.IO.Class (MonadIO)
 import Data.Text (Text)
 import qualified RenderState as R
-import RenderState (BoardInfo (BoardInfo))
-import Linear
+import RenderState (BoardInfo (BoardInfo), emptyGrid)
+import Linear ( V2(V2), V4(..) )
 import SDL (($=))
 import Data.Word (Word8)
 import Foreign.C.Types (CInt)
-import Data.Foldable (forM_)
 import Data.Array (assocs)
-import EventQueue (EventQueue(EventQueue, speed))
+import EventQueue (EventQueue(EventQueue))
 import qualified Snake
 import Control.Concurrent.BoundedChan (tryWriteChan)
-import App (Config, HasConfig (getConfig), HasEventQueue (getQueue), AppT (runApp), AppState (renderState), MonadRender (render),  MonadQueue, MonadGame, updateQueueTime, gameStep)
+import App (Config, HasConfig (getConfig), HasEventQueue (getQueue), AppT (runApp), AppState (renderState), MonadRender (render), updateQueueTime, gameStep)
 import Control.Monad.Reader
+    ( MonadIO(..),
+      MonadReader,
+      ReaderT(runReaderT),
+      forM_,
+      void,
+      unless,
+      asks )
 import Control.Monad.State
-import Control.Concurrent (threadDelay, forkIO)
+    ( MonadState,
+      StateT,
+      gets,
+      evalStateT )
+import Control.Concurrent (threadDelay)
 
 -- -----------
 -- |- Utils -|
@@ -106,14 +112,15 @@ getGraphicDevices (Env _ _ win ren) = (win, ren)
 -- |-------------|
 
 renderBoardSDL :: MonadIO m => SDL.Window -> SDL.Renderer -> R.RenderState  -> m ()
-renderBoardSDL window renderer (R.RenderState ar (BoardInfo i j) game_over current_score) = do
+--                                                |- Todo SDL usa los ejes x / y intercambiados a nuestra TUI
+renderBoardSDL window renderer (R.RenderState ar (BoardInfo board_width board_height) game_over current_score) = do
     SDL.clear renderer                  -- initialize sdl's render backbuffer
-    V2 x y <- SDL.get $ SDL.windowSize window
-    let xSize = x `quot` fromIntegral i -- Size of the squares of the grid. Essentially, divide the
-        ySize = y `quot` fromIntegral j -- size of the window by the number of cells
+    V2 window_width window_height <- SDL.get $ SDL.windowSize window
+    let xSize = window_width `quot` fromIntegral board_width   -- Size of the squares of the grid. Essentially, divide the
+        ySize = window_height `quot` fromIntegral board_height -- size of the window by the number of cells
     forM_ (assocs ar) $ \((a, b), cell) -> do
-      let coordX = xSize * (fromIntegral a - 1)
-          coordY = ySize * (fromIntegral b - 1)
+      let coordX = xSize * (fromIntegral b - 1)   -- TODO: la coordenada y es la x porque los ejes estan invertidos 
+          coordY = ySize * (fromIntegral a - 1)   --
           r = mkRect coordX coordY xSize ySize  -- Create a rectangle in the adecuate coordintates
       case cell of
           R.Empty -> do
@@ -122,9 +129,15 @@ renderBoardSDL window renderer (R.RenderState ar (BoardInfo i j) game_over curre
           R.SnakeHead -> drawCell blue  r renderer
           R.Snake     -> drawCell green r renderer
           R.Apple     -> drawCell red   r renderer
-      
+
     SDL.rendererDrawColor renderer $= black  -- Set color to background. Notice that previous calls to rendererDrawColor are limited to some rectangles, but most of the screen is empty, hence we must call some background color
     SDL.present renderer                     -- draws sdl's render backbuffer
+
+renderSDL :: MonadIO m => SDL.Window -> SDL.Renderer -> R.RenderState  -> m ()
+renderSDL win ren render_state@(R.RenderState _ bi game_over n) =
+  if game_over
+    then renderBoardSDL win ren (R.RenderState (emptyGrid bi) bi game_over n)
+    else renderBoardSDL win ren render_state
 
 -- |---------------|
 -- |- User Inputs -|
@@ -138,15 +151,15 @@ pattern LeftArrow <- SDL.Event _ (SDL.KeyboardEvent (SDL.KeyboardEventData _ SDL
 pattern RightArrow <- SDL.Event _ (SDL.KeyboardEvent (SDL.KeyboardEventData _ SDL.Pressed _ (SDL.Keysym SDL.ScancodeRight _ _ )))
 
 
-writeUserInput :: [SDL.Event] -> EventQueue -> IO [Bool]
-writeUserInput sdl_events (EventQueue userqueue _) = do
-  forM sdl_events $ \e -> do
-    case e of
-      UpArrow -> tryWriteChan userqueue Snake.North
-      LeftArrow -> tryWriteChan userqueue Snake.West
-      RightArrow -> tryWriteChan userqueue Snake.East
-      DownArrow -> tryWriteChan userqueue Snake.South
-      _   -> return False
+writeUserInput :: [SDL.Event] -> EventQueue -> IO ()
+writeUserInput sdl_events (EventQueue userqueue _) =
+  forM_ sdl_events $ \e -> do
+  case e of
+    UpArrow -> void $ tryWriteChan userqueue Snake.North
+    LeftArrow -> void $ tryWriteChan userqueue Snake.West
+    RightArrow -> void $ tryWriteChan userqueue Snake.East
+    DownArrow -> void $ tryWriteChan userqueue Snake.South
+    _   -> return ()
 
 
 -- -------------
@@ -162,7 +175,7 @@ instance MonadRender Gui where
   render = do
     (w, r) <- asks getGraphicDevices
     rs     <- gets renderState
-    renderBoardSDL w r rs
+    renderSDL w r rs
 
 
 gameloop :: ( MonadIO m
@@ -172,27 +185,27 @@ gameloop :: ( MonadIO m
             , MonadRender m
             , HasEventQueue e) => m ()
 gameloop = do
-    events <- SDL.pollEvents
     event_queue <- asks getQueue
-    -- liftIO $ print events
+
+    -- Read sdl events
+    sdl_events  <- SDL.pollEvents
     let eventIsQPress event =
           case SDL.eventPayload event of
             SDL.QuitEvent -> True
             _ -> False
-    let qPressed = any eventIsQPress events
+    let qPressed = any eventIsQPress sdl_events -- check for "quit" event
+
+    -- Update speed
     new_speed <- updateQueueTime
-    bs <- liftIO $ writeUserInput events event_queue
-    
-    
-    liftIO $ print bs
+
+    liftIO $ writeUserInput sdl_events event_queue -- write sdl into game queue
     liftIO $ threadDelay new_speed
-    
+
     gameStep
 
-    
-
+    -- Quit on exit event
     unless qPressed gameloop
-    
+
 
 
 -- | Given an initial AppState and an Env, it initializes the gameloop
