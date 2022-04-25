@@ -1,6 +1,8 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleContexts #-}
 module GUI where
 
 import qualified SDL
@@ -15,10 +17,13 @@ import Data.Word (Word8)
 import Foreign.C.Types (CInt)
 import Data.Foldable (forM_)
 import Data.Array (assocs)
-import EventQueue (EventQueue(EventQueue))
+import EventQueue (EventQueue(EventQueue, speed))
 import qualified Snake
 import Control.Concurrent.BoundedChan (tryWriteChan)
-import App (Config, HasConfig (getConfig), HasEventQueue (getQueue))
+import App (Config, HasConfig (getConfig), HasEventQueue (getQueue), AppT (runApp), AppState (renderState), MonadRender (render),  MonadQueue, MonadGame, updateQueueTime, gameStep)
+import Control.Monad.Reader
+import Control.Monad.State
+import Control.Concurrent (threadDelay, forkIO)
 
 -- -----------
 -- |- Utils -|
@@ -46,12 +51,14 @@ black = V4 0 0 0 0
 white :: V4 Word8
 white = V4 255 255 255 0
 
+-- Create a rectangle
 mkRect :: a -> a -> a -> a-> SDL.Rectangle a
 mkRect x y w h = SDL.Rectangle rec_origin rec_size
   where
     rec_origin = SDL.P (SDL.V2 x y)
     rec_size = SDL.V2 w h
 
+-- Create a window, runs the io action and releases resources
 withWindow :: MonadIO m => SDL.WindowConfig -> Text -> (SDL.Window -> m a) -> m ()
 withWindow cfg title io = do
   w <- SDL.createWindow title cfg
@@ -59,6 +66,7 @@ withWindow cfg title io = do
   void $ io w
   SDL.destroyWindow w
 
+-- Create a renderer, runs the io action and releases resources
 withRenderer :: MonadIO m => SDL.RendererConfig -> SDL.Window -> (SDL.Renderer -> m a) -> m a
 withRenderer cfg window io = do
   renderer <- SDL.createRenderer window (-1) cfg
@@ -78,14 +86,18 @@ drawCell col r renderer  = do
 -- |---------------|
 
 -- | The environment for GUI version of snake
-data Env = Env Config EventQueue
+data Env = Env Config EventQueue SDL.Window SDL.Renderer
 
 -- The instances necesary to work within the App Monad
 instance HasConfig Env where
-  getConfig (Env con _) = con
+  getConfig (Env con _ _ _) = con
 
 instance HasEventQueue Env where
-  getQueue (Env _ q) = q
+  getQueue (Env _ q _ _) = q
+
+
+getGraphicDevices :: Env -> (SDL.Window , SDL.Renderer)
+getGraphicDevices (Env _ _ win ren) = (win, ren)
 
 
 
@@ -126,13 +138,63 @@ pattern LeftArrow <- SDL.Event _ (SDL.KeyboardEvent (SDL.KeyboardEventData _ SDL
 pattern RightArrow <- SDL.Event _ (SDL.KeyboardEvent (SDL.KeyboardEventData _ SDL.Pressed _ (SDL.Keysym SDL.ScancodeRight _ _ )))
 
 
-writeUserInput :: EventQueue -> IO ()
-writeUserInput queue@(EventQueue userqueue _) = do
-    e <- SDL.pollEvent
+writeUserInput :: [SDL.Event] -> EventQueue -> IO [Bool]
+writeUserInput sdl_events (EventQueue userqueue _) = do
+  forM sdl_events $ \e -> do
     case e of
-      Just UpArrow -> tryWriteChan userqueue Snake.North >> writeUserInput queue
-      Just LeftArrow -> tryWriteChan userqueue Snake.West  >> writeUserInput queue
-      Just RightArrow -> tryWriteChan userqueue Snake.East  >> writeUserInput queue
-      Just DownArrow -> tryWriteChan userqueue Snake.South >> writeUserInput queue
-      _   -> writeUserInput queue
+      UpArrow -> tryWriteChan userqueue Snake.North
+      LeftArrow -> tryWriteChan userqueue Snake.West
+      RightArrow -> tryWriteChan userqueue Snake.East
+      DownArrow -> tryWriteChan userqueue Snake.South
+      _   -> return False
 
+
+-- -------------
+-- |- GUI App -|
+-- -------------
+
+-- Defining TUI
+newtype Gui a = Gui { runGui :: AppT Env (StateT AppState IO) a }
+  deriving (Functor, Applicative, Monad, MonadReader Env, MonadIO, MonadState AppState)
+
+-- How is renderer in the terminal.
+instance MonadRender Gui where
+  render = do
+    (w, r) <- asks getGraphicDevices
+    rs     <- gets renderState
+    renderBoardSDL w r rs
+
+
+gameloop :: ( MonadIO m
+            , MonadReader e m
+            , HasConfig e
+            , MonadState AppState m
+            , MonadRender m
+            , HasEventQueue e) => m ()
+gameloop = do
+    events <- SDL.pollEvents
+    event_queue <- asks getQueue
+    -- liftIO $ print events
+    let eventIsQPress event =
+          case SDL.eventPayload event of
+            SDL.QuitEvent -> True
+            _ -> False
+    let qPressed = any eventIsQPress events
+    new_speed <- updateQueueTime
+    bs <- liftIO $ writeUserInput events event_queue
+    
+    
+    liftIO $ print bs
+    liftIO $ threadDelay new_speed
+    
+    gameStep
+
+    
+
+    unless qPressed gameloop
+    
+
+
+-- | Given an initial AppState and an Env, it initializes the gameloop
+run :: AppState -> Env -> IO ()
+run initialState env = flip evalStateT initialState . flip runReaderT env . runApp . runGui $ gameloop

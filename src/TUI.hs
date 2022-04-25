@@ -20,10 +20,12 @@ import Data.ByteString.Builder (Builder)
 import RenderState (RenderState (RenderState), BoardInfo (BoardInfo), emptyGrid, CellType (Apple, SnakeHead, Snake, Empty))
 import Data.Foldable (foldl')
 import Control.Monad.State (StateT, MonadState, gets, evalStateT)
-import App (AppState (renderState), AppT (runApp), MonadRender (render), gameloop, Config, HasConfig (getConfig), HasEventQueue (getQueue))
+import App (AppState (renderState), AppT (runApp), MonadRender (render), Config, HasConfig (getConfig), HasEventQueue (getQueue), MonadQueue, MonadGame, updateQueueTime, gameStep)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Reader
     ( MonadIO(..), ReaderT(runReaderT), MonadReader )
+import Control.Monad (forever)
+import Control.Concurrent (threadDelay)
 
 {-
 In order to make something running within the App monad we need to provide 
@@ -125,7 +127,20 @@ instance MonadRender Tui where
     r <- gets renderState
     liftIO $ B.hPutBuilder stdout "\ESC[2J" >> B.hPutBuilder stdout (toBuilder r)
 
-
 -- | Given an initial AppState and an Env, it initializes the gameloop
+-- | Given the app state, the render state and the event queue, updates everything in one time step, then execute again.
+gameloop :: ( MonadIO m
+            , MonadReader e m
+            , HasConfig e
+            , MonadState AppState m
+            , MonadQueue m
+            , MonadRender m
+            , MonadGame m) => m ()
+gameloop = forever $ do
+    new_speed <- updateQueueTime
+    liftIO $ threadDelay new_speed
+    gameStep
+
+
 run :: AppState -> Env -> IO ()
 run initialState env = flip evalStateT initialState . flip runReaderT env . runApp . runTui $ gameloop

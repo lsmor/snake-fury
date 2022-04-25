@@ -115,17 +115,3 @@ updateQueueTime = do
     return new_speed
 
 
--- | Given the app state, the render state and the event queue, updates everything in one time step, then execute again.
-gameloop :: ( MonadIO m
-            , MonadReader e m
-            , HasConfig e
-            , MonadState AppState m
-            , MonadQueue m
-            , MonadRender m
-            , MonadGame m) => m ()
-gameloop = forever $ do
-    new_speed <- updateQueueTime
-    liftIO $ threadDelay new_speed
-    gameStep
-
-
