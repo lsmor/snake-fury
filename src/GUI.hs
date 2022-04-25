@@ -118,7 +118,7 @@ renderBoardSDL window renderer (R.RenderState ar (BoardInfo board_height board_w
     let xSize = window_width `quot` fromIntegral board_width   -- Size of the squares of the grid. Essentially, divide the
         ySize = window_height `quot` fromIntegral board_height -- size of the window by the number of cells
     forM_ (assocs ar) $ \((a, b), cell) -> do
-      let coordX = xSize * (fromIntegral b - 1)   -- TODO: la coordenada y es la x porque los ejes estan invertidos 
+      let coordX = xSize * (fromIntegral b - 1)   -- TODO: x and y coordinates are swaped w.r.t. tui version
           coordY = ySize * (fromIntegral a - 1)   --
           r = mkRect coordX coordY xSize ySize  -- Create a rectangle in the adecuate coordintates
       case cell of
