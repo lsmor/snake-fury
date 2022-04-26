@@ -54,6 +54,7 @@ library gui
   build-depends:
       snake-fury
     , sdl2 >= 2.5.3.0
+    , sdl2-ttf >= 2.1.2
     , base >=4.14
     , array >= 0.5.4.0
     , mtl >= 2.2.2
@@ -76,6 +77,7 @@ executable snake-gui
     , gui
     , base >=4.14
     , sdl2 >= 2.5.3.0
+    , sdl2-ttf >= 2.1.2
   default-language: Haskell2010
 
 executable snake-tui

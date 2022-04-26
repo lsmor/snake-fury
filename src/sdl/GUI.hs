@@ -1,9 +1,12 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module GUI where
 
 import qualified SDL
+import qualified SDL.Font as Font
 import Data.Text (Text)
 import qualified RenderState as R
 import RenderState (BoardInfo (BoardInfo), emptyGrid)
@@ -30,6 +33,8 @@ import Control.Monad.State
       gets,
       evalStateT )
 import Control.Concurrent (threadDelay)
+import qualified Data.Text as Text
+import Data.Bifunctor (Bifunctor(bimap))
 
 -- -----------
 -- |- Utils -|
@@ -57,6 +62,11 @@ black = V4 0 0 0 0
 white :: V4 Word8
 white = V4 255 255 255 0
 
+-- Panel color
+gray :: V4 Word8
+gray = V4 100 100 100 0
+
+
 -- Create a rectangle
 mkRect :: a -> a -> a -> a-> SDL.Rectangle a
 mkRect x y w h = SDL.Rectangle rec_origin rec_size
@@ -71,6 +81,7 @@ withWindow cfg title io = do
   SDL.showWindow w
   void $ io w
   SDL.destroyWindow w
+  SDL.quit
 
 -- Create a renderer, runs the io action and releases resources
 withRenderer :: MonadIO m => SDL.RendererConfig -> SDL.Window -> (SDL.Renderer -> m a) -> m a
@@ -92,18 +103,18 @@ drawCell col r renderer  = do
 -- |---------------|
 
 -- | The environment for GUI version of snake
-data Env = Env Config EventQueue SDL.Window SDL.Renderer
+data Env = Env Config EventQueue SDL.Window SDL.Renderer Font.Font
 
 -- The instances necesary to work within the App Monad
 instance HasConfig Env where
-  getConfig (Env con _ _ _) = con
+  getConfig (Env con _ _ _ _) = con
 
 instance HasEventQueue Env where
-  getQueue (Env _ q _ _) = q
+  getQueue (Env _ q _ _ _) = q
 
 
-getGraphicDevices :: Env -> (SDL.Window , SDL.Renderer)
-getGraphicDevices (Env _ _ win ren) = (win, ren)
+getGraphicDevices :: Env -> (SDL.Window , SDL.Renderer, Font.Font)
+getGraphicDevices (Env _ _ win ren font) = (win, ren, font)
 
 
 
@@ -111,15 +122,42 @@ getGraphicDevices (Env _ _ win ren) = (win, ren)
 -- |- Rendering -|
 -- |-------------|
 
-renderBoardSDL :: MonadIO m => SDL.Window -> SDL.Renderer -> R.RenderState  -> m ()
-renderBoardSDL window renderer (R.RenderState ar (BoardInfo board_height board_width) game_over current_score) = do
-    SDL.clear renderer                  -- initialize sdl's render backbuffer
-    V2 window_width window_height <- SDL.get $ SDL.windowSize window
-    let xSize = window_width `quot` fromIntegral board_width   -- Size of the squares of the grid. Essentially, divide the
-        ySize = window_height `quot` fromIntegral board_height -- size of the window by the number of cells
+-- | This function render the top panel with the score
+renderScore :: (MonadIO m, MonadReader Env m) => Int -> Bool  -> CInt -> SDL.Renderer -> Font.Font -> m (CInt, CInt)
+renderScore current_score game_over window_width renderer font = do
+  -- Display the score. Create a surface with the text, then copy it to a texture, then render it!
+  -- Notice that in order to avoid stretchness, we need to calculate the size of the displayed text
+  let game_over_text = if game_over then " Game Over!" else Text.empty 
+      t = "score: " <> Text.pack (show current_score) <> game_over_text
+  (text_width, text_height) <- bimap fromIntegral fromIntegral <$> Font.size font t
+  surface <- Font.blended font white t
+  texture <- SDL.createTextureFromSurface renderer surface
+  
+  -- Draw a grey cell on the top and then the score
+  drawCell gray (mkRect 0 0 window_width text_height) renderer
+  SDL.copy renderer texture Nothing (Just $ mkRect 0 0 text_width text_height) -- Put the text on the top left corner
+
+  SDL.freeSurface surface
+  SDL.destroyTexture texture
+
+  return (text_width, text_height)
+
+-- | This function composes the whole scene
+renderBoardSDL :: (MonadIO m, MonadReader Env m) => R.RenderState -> m ()
+renderBoardSDL  (R.RenderState ar (BoardInfo board_height board_width) game_over current_score) = do
+    (window, renderer, font) <- asks getGraphicDevices
+    SDL.clear renderer                                                -- initialize sdl's render backbuffer
+    V2 window_width window_height <- SDL.get $ SDL.windowSize window  -- Get windows attributes
+    
+    -- Render the up panel
+    (text_width, text_height) <- renderScore current_score game_over window_width renderer font
+    
+    -- Print the board. Notice we need to manually reduce windows height
+    let xSize = window_width `quot` fromIntegral board_width                   -- Size of the squares of the grid. Essentially, divide the
+        ySize = (window_height - text_height) `quot` fromIntegral board_height -- size of the window by the number of cells
     forM_ (assocs ar) $ \((a, b), cell) -> do
       let coordX = xSize * (fromIntegral b - 1)   -- TODO: x and y coordinates are swaped w.r.t. tui version
-          coordY = ySize * (fromIntegral a - 1)   --
+          coordY = ySize * (fromIntegral a - 1) + text_height --
           r = mkRect coordX coordY xSize ySize  -- Create a rectangle in the adecuate coordintates
       case cell of
           R.Empty -> do
@@ -132,11 +170,12 @@ renderBoardSDL window renderer (R.RenderState ar (BoardInfo board_height board_w
     SDL.rendererDrawColor renderer $= black  -- Set color to background. Notice that previous calls to rendererDrawColor are limited to some rectangles, but most of the screen is empty, hence we must call some background color
     SDL.present renderer                     -- draws sdl's render backbuffer
 
-renderSDL :: MonadIO m => SDL.Window -> SDL.Renderer -> R.RenderState  -> m ()
-renderSDL win ren render_state@(R.RenderState _ bi game_over n) =
+-- | This function renders the board if no gameover
+renderSDL :: (MonadIO m, MonadReader Env m) => R.RenderState  -> m ()
+renderSDL render_state@(R.RenderState _ bi game_over n) =
   if game_over
-    then renderBoardSDL win ren (R.RenderState (emptyGrid bi) bi game_over n)
-    else renderBoardSDL win ren render_state
+    then renderBoardSDL (R.RenderState (emptyGrid bi) bi game_over n)
+    else renderBoardSDL render_state
 
 -- |---------------|
 -- |- User Inputs -|
@@ -172,9 +211,8 @@ newtype Gui a = Gui { runGui :: AppT Env (StateT AppState IO) a }
 -- How is renderer in the terminal.
 instance MonadRender Gui where
   render = do
-    (w, r) <- asks getGraphicDevices
     rs     <- gets renderState
-    renderSDL w r rs
+    renderSDL rs
 
 
 gameloop :: ( MonadIO m
