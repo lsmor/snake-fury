@@ -32,7 +32,7 @@ import Control.Monad.State
       StateT,
       gets,
       evalStateT )
-import Control.Concurrent (threadDelay)
+import Control.Concurrent (threadDelay, forkIO)
 import qualified Data.Text as Text
 import Data.Bifunctor (Bifunctor(bimap))
 
@@ -222,21 +222,28 @@ gameloop :: ( MonadIO m
             , MonadRender m
             , HasEventQueue e) => m ()
 gameloop = do
-    event_queue <- asks getQueue
+    -- Update speed. Notice that SDL.pollEvents must be run in the same 
+    -- thread as the rendering process, that is different from the TUI version
+    -- In which we initialize a concurrent writeInput process. the consequence
+    -- is that threadDelay now affects the rendering speed, and the event polling.
+    -- To for example, using threadDelay in the middle of SDL.pollEvents and gameStep
+    -- causes a little bit of unresponsiveness. In general, snake is played fast enough 
+    -- not be a problem, but if you test the application at low speed, in becomes buggy.
 
-    -- Read sdl events
+    new_speed <- updateQueueTime
+    liftIO $ threadDelay new_speed
+
+    -- Read sdl events and push them into the application queue
     sdl_events  <- SDL.pollEvents
+    event_queue <- asks getQueue
+    liftIO $ forkIO $ writeUserInput sdl_events event_queue -- write sdl into game queue
+
+    -- check for "quit" event
     let eventIsQPress event =
           case SDL.eventPayload event of
             SDL.QuitEvent -> True
             _ -> False
-    let qPressed = any eventIsQPress sdl_events -- check for "quit" event
-
-    -- Update speed
-    new_speed <- updateQueueTime
-
-    liftIO $ writeUserInput sdl_events event_queue -- write sdl into game queue
-    liftIO $ threadDelay new_speed
+    let qPressed = any eventIsQPress sdl_events 
 
     gameStep
 
