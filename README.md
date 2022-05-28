@@ -29,9 +29,14 @@ At the moment there are no exercises prepared, but if you are interested there a
 - v1.2, v1.3, v1.4 uses the so called [three layer of Haskell pattern](https://www.parsonsmatt.org/2018/03/22/three_layer_haskell_cake.html) to ~~overengineer~~ make the application not dependent on the concrete implementation, but on abstractions. 
 - v1.5 is the same as v0.5. If you have reached here, you might be interested in cheking it out!
 
+This is how the game looks in the terminal:
+![](./assets/snake-tui.gif)
+
 **v2.XX are the versions using monads with SDL**
 - whereas versions 0 and 1 render the snake game simply by flushing out a bytestring into the console, the version 2 uses sdl to provide a graphical interface to the game. The key point of this steps is realize how abstractions like `mtl` or `HasXXX` type classes lead to better code reusability.
 
+This is how the game looks as a gui:
+![](./assets/snake-gui.gif)
 
 ## What this repo is *NOT*
 This is not a Haskell tutorial. The challenger is expected to know (at least a little) basic Haskell: syntax, recursion, algebraic data types and records. The challenger should take care about finding learning resources for those parts of the code he/she doesn't understand. Of course, it isn't mandatory to know them perfectly, and the challenge is intended to be difficult if you are a beginner... otherwise, I wouldn't be a challenge isn't it?
