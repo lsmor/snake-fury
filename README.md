@@ -33,10 +33,53 @@ At the moment there are no exercises prepared, but if you are interested there a
 - whereas versions 0 and 1 render the snake game simply by flushing out a bytestring into the console, the version 2 uses sdl to provide a graphical interface to the game. The key point of this steps is realize how abstractions like `mtl` or `HasXXX` type classes lead to better code reusability.
 
 
-
-
 ## What this repo is *NOT*
 This is not a Haskell tutorial. The challenger is expected to know (at least a little) basic Haskell: syntax, recursion, algebraic data types and records. The challenger should take care about finding learning resources for those parts of the code he/she doesn't understand. Of course, it isn't mandatory to know them perfectly, and the challenge is intended to be difficult if you are a beginner... otherwise, I wouldn't be a challenge isn't it?
+
+
+# Overview.
+
+The general arquitecture of the software is the following:
+- we have two threads. 
+    - The sencondary thread is continuously reading from users keyboard and pushing the key strokes into an asynchronous queue
+    - The main thread reads at steady time from the queue, and based on what the user has pressed, it runs the game logic and prints the board in the console
+- We keep in memory two states.
+    - the game state has all the info about the game logic
+    - the render state has info for rendering. 
+- The two states components communicate via messages. Every change in the game state sends a message to the render state.
+
+The following diagram helps to visualize
+
+```
+        translate key strokes into snake
+        movements. 
+            ex: UpArrow -> Move North, 
+                LeftArrow -> Move West, 
+                etc...
+
+                   +--------- Secondary Thread ---------+           This Thread runs continuously
+                   |                    +------------+  |           So if the user pressed keys faster
+(user keyboard) ----> writeUserInput -> | EventQueue |  |           Than the game logic updates, We
+                   |                    +------------+  |           Still capture the key stroke.
+                   +---------------------------|--------+
+                                               |--->--|  
+             +------------------ Main Thread ---------|--------+    This thread runs at constant time,  
+             |                                        |        |    as the snake game does. Pulls event
+ (draw to <---------|    |-- RenderMessage <--|    readEvent   |    from the queue and updates GameState
+  console)   |      |    |                    |       |        |    
+             |     +-------------+          +-----------+      |    Then, the changes in the games state
+             |  |->| RenderState |->|    |->| GameState |->|   |    spawn messages for the rendering state
+             |  |  +-------------+  |    |  +-----------+  |   |    
+             |  |     update on     |    |    update on    |   |    The rendering state updates based on
+             |  |   RenderMessage   |    |      Event      |   |    such messages
+             |  |----<-------<------|    |----<-------<----|   |
+             +-------------------------------------------------+ 
+
+        Notice the the user might not press any key. In such a situation
+        The readEvent function should return a Tick event. 
+
+```
+
 
 ## Contributions
 The current state is not good for contributions, since I am still defining the overall structure of the challenge.
