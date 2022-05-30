@@ -1,5 +1,7 @@
 # Haskell's snake challenge.
 
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/lsmor/snake-fury)
+
 **This is a work in progress. The last commit is not reliable. If you want to compile, use one of the tags** . 
 
 The idea of this repo is to provide a learning path for Haskell via writing a simple but complex enough program: The Snake Game in the Console. The approach is the following:
