@@ -22,3 +22,6 @@ RUN ghcup install cabal
 # Setting up this configuration will avoid downloading haskell compiler twice.
 RUN stack config set install-ghc --global false
 RUN stack config set system-ghc --global true 
+
+# install sdl2 dependencies
+RUN sudo apt-get install -y libsdl2-dev libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0
