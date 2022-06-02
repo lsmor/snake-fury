@@ -1,9 +1,8 @@
 image:
   file: .gitpod.Dockerfile
 tasks:
-  - init: |
-      git checkout complete-solution
-      stack build
+  - before: git checkout complete-solution
+  - init: stack install
 vscode:
   extensions:
     - haskell.haskell
