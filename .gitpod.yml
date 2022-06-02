@@ -2,6 +2,7 @@ image:
   file: .gitpod.Dockerfile
 tasks:
   - init: |
+      git checkout complete-solution
       stack build
 vscode:
   extensions:
