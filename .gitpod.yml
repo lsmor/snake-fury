@@ -4,8 +4,6 @@ tasks:
   - name: Build complete version of snake-fury
     before: git checkout complete-solution
     init: stack build
-    env: 
-      PATH: ${PATH}:${HOME}/.local/bin
     command: stack install
 vscode:
   extensions:
