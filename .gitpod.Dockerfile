@@ -8,7 +8,8 @@ RUN sudo apt-get install -y build-essential curl libffi-dev libffi7 libgmp-dev l
 RUN sudo curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
 
 # Add ghcup to path and add the folder stack installs the software
-ENV PATH=${PATH}:${HOME}/.ghcup/bin:${HOME}/.local/bin
+ENV PATH=${PATH}:${HOME}/.ghcup/bin
+ENV PATH=${PATH}:${HOME}/.local/bin
 
 # Set up the environment. 
 RUN ghcup install ghc 8.10.7
