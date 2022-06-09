@@ -63,7 +63,7 @@ The Haskell learning curve
 | /                                                                      \___________________ :) $ :> $ :) $ :> $ :) $ :> $ :) $ :> _______________|   <- going up isn't allowed!      
 |________________________________________________________________________________________________________________________________________________________________________________________
  | ADTs               | recursion       | trying to build  | realizing | work harder to  consolidate | Feeling good about | learning monads | using     | monad   | now, you know monads
- | pattern matching   | curryfication   | your first small |  you know | knowledge. Understad curryf | all learn in the   | in blogs        | monads in | trans   | you'll be unable
+ | pattern matching   | curryfication   | your first small |  you know | knowledge. Understand curry | all learn in the   | in blogs        | monads in | trans   | you'll be unable
  | list comprehension | function        |   application    | nothing   | partial functions, weird    | newby slope        |                 | actuall   | and mtl | to explain what they
  | basic functions    |    composition  |                  |           | symbols, etc...             |                    |                 | code      |         | are
                                                                        
