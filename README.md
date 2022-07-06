@@ -15,7 +15,7 @@ The second legs is even more interesting. Haskell is notoriously known by its di
 Below There is a dramatization of the Haskell learning curve. This challenge aims to be helpfull companion from the newby slope to the temple of oblivion... but be aware, nothing will safe you from the temptation of abandom. Hopefully, you'll be able to climb up to the temple and spread the lambdas  
 
 
-![dramatization of Haskell's learning curve](./assets/Haskell_learning_curve.svg)
+![dramatization of Haskell's learning curve](./assets/Haskell_learning_curve.png)
 
 
 ## Current status
