@@ -75,44 +75,20 @@ This challenge is divided in three parts:
 ## Arquitecture
 
 The general arquitecture of the software is the following:
-- we have two thread. 
-    - The sencondary thread is continuously reading from users keyboard and pushing the key strokes into an asynchronous queue
-    - The main thread reads at steady time from the queue, and based on what the user has pressed, it runs the game logic and prints the board in the console
-- We keep in memory two states.
-    - the game state has all the info about the game logic
-    - the render state has info for rendering. 
-- The two states components communicate via messages. Every change in the game state sends a message to the render state.
+- There are three major components: 
+  - An Event Queue: It keeps a queue of the following events to happen in the game based on the user keyboard input
+  - A Game State: Is the logic state. It keeps track on the snake body, the current apple, the direction of movement, etc...
+  - A Render State: Is the game board. Instead of building up the board from the GameState, we keep an array in memory and modify it as convenient
+- Each compoment send a message to the next one in the following order: (user keyboard) -> EventQueue -> GameState -> RenderState -> (render device)
+- we have two threads. 
+    - The sencondary thread is continuously reading from users keyboard and pushing the key strokes into an asynchronous EventQueue
+    - The main thread reads at steady time from the EventQueue, and based on what the user has pressed, it runs the game logic and prints the board in the console
+
+Notice that two threads are necessary, since use can press keys faster than the game update. For example let say we run a frame each second and a half (normal speed in the snake game.), then a user is likely to press keys faster than that. If the key stroke are catch as the same speed the game runs, then many stroke will be lost. 
 
 The following diagram helps to visualize
 
-```
-        translate key strokes into snake
-        movements. 
-            ex: UpArrow -> Move North, 
-                LeftArrow -> Move West, 
-                etc...
-
-                   +--------- Secondary Thread ---------+           This Thread runs continuously
-                   |                    +------------+  |           So if the user pressed keys faster
-(user keyboard) ----> writeUserInput -> | EventQueue |  |           Than the game logic updates, We
-                   |                    +------------+  |           Still capture the key stroke.
-                   +---------------------------|--------+
-                                               |--->--|  
-             +------------------ Main Thread ---------|--------+    This thread runs at constant time,  
-             |                                        |        |    as the snake game does. Pulls event
- (draw to <---------|    |-- RenderMessage <--|    readEvent   |    from the queue and updates GameState
-  console)   |      |    |                    |       |        |    
-             |     +-------------+          +-----------+      |    Then, the changes in the games state
-             |  |->| RenderState |->|    |->| GameState |->|   |    spawn messages for the rendering state
-             |  |  +-------------+  |    |  +-----------+  |   |    
-             |  |     update on     |    |    update on    |   |    The rendering state updates based on
-             |  |   RenderMessage   |    |      Event      |   |    such messages
-             |  |----<-------<------|    |----<-------<----|   |
-             +-------------------------------------------------+ 
-
-        Notice the the user might not press any key. In such a situation
-        The readEvent function should return a Tick event. 
-
+![Overview of the arquitecture](./assets/snake_arquitecture.png)
 
 
 ## Contributions
