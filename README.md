@@ -2,38 +2,39 @@
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/lsmor/snake-fury)
 
-Welcome to snake-fury: the Haskell challenge for beginners. This challenge aims to provide a learning path for people willing to learn Haskell further than basic recursion exercises by implementing the snake game in Haskell. The pedagogical approach followed by snake-fury is based in two legs:
+## Introduction
 
-- snake-fury isn't a tutorial, but a challenge.
-- snake-fury is focused on learn by refactoring, not by example.
+**Welcome to snake-fury**: the Haskell challenge for beginners. This challenge aims to provide a learning path for people willing to learn Haskell further than basic recursion exercises by implementing the snake game in Haskell. Snake-fury's pedagogical approach followed is based on two legs:
 
-The first legs means that you'll be asked to implement some functions/algorithms but it is expected that the challenger will be unable to implement them without some research on hackage documentation, blogs, youtube videos, etc... Guidelines will be given to help the challenger, nevetheless an important skill when learning Haskell is to be able to search, read and understand documentation which is (oftenly, but not always) more complex and less accesible than other programming languages. 
+- snake-fury isn't a tutorial but a challenge.
+- snake-fury is focused on learning by refactoring, not by example.
 
-The second legs is even more interesting. Haskell is notoriously known by its difficulty and by the popularization of the holy triad: Functor - Applicative - Monad. The are plenty of tutorials showing examples, hundred of thousand of lines triying to make them accesible and newcomer friendly... But with all due respect, It seems like they all fail to explain: "Why monads? Why not other less mathematical abstraction? Why not classic OOP patterns?". The approach given by snake-fury, is to make the same application twice... it sounds crazy, but the idea goes like this: You'll implement da "pure" version of the snake game. Not monads, no functors, no bullsh\*t. Then you will refactor the core application logic using the state and reader monads. Then you'll be ask to abstract your code, to use `mtl` classes to make your code less dependant on the concrete implementation.
+The first leg means that you'll be asked to implement some functions/algorithms. It is expected that the challenger will be unable to implement them without some research on Hackage's documentation, blogs, youtube videos, etc. There will be guidelines to help the challenger. Nevertheless, an important skill when learning Haskell is to be able to search, read and understand the documentation that is (often, but not always) more complex and less accessible than other programming languages. 
+
+The second leg is even more interesting. Haskell is notoriously known for its difficulty and the popularization of the holy triad: Functor - Applicative - Monad. The are plenty of tutorials showing examples and hundreds of thousands of lines trying to make them accessible and newcomer-friendly... But with all due respect, It seems they all fail to explain: "Why monads? Why not other less mathematical abstraction? Why not classic OOP patterns?". The approach given by snake-fury is to make the same application twice... it sounds crazy, but the idea goes like this: You'll implement a "pure" version of the snake game: No monads, no functors, no abstractions[*]. Then you will refactor the core application logic using the state and reader monads. Then you'll be asked to abstract your code and to use `mtl` classes to make your code less dependent on the concrete implementation.
 
 
-Below There is a dramatization of the Haskell learning curve. This challenge aims to be helpfull companion from the newby slope to the temple of oblivion... but be aware, nothing will safe you from the temptation of abandom. Hopefully, you'll be able to climb up to the temple and spread the lambdas  
+Below there is a dramatization of Haskell's learning curve. This challenge aims to be a helpful companion from the newby slope to the temple of oblivion... but be aware, nothing will save you from the temptation of abandon. Hopefully, you'll be able to climb up to the temple and spread the lambdas  
 
 
 ![dramatization of Haskell's learning curve](./assets/Haskell_learning_curve.png)
 
+### [*] note about not using monads
+> By that I mean, not using do notation nor functor/applicative/monads combinators like `liftA2`, `fmap`, `>>=`, etc...
+> 
+> Obviously, The IO and the asynchronous part of the code is provided and the challenger is not expected to solve it.
 
-## Current status
 
-**This is a work in progress. The last commit is not reliable. If you want to compile, use one of the tags** . 
+## How to use this repository.
 
-The idea of this repo is to provide a learning path for Haskell via writing a simple but complex enough program: The Snake Game in the Console. The approach is the following:
+If you don't have a working haskell developer environment go to [this section](#markdown-header-set-up-a-development-environment). You'll need git too. 
 
-The same game is written twice. First, it is written using no monads (read below), all game logic is done with pure functions. Then, the code is refactored to use monads. The idea of this approach is to light away the darkness around monads: The challenger has the opportunity to see with its own eyes how monads lead to cleaner and more ergonomic code.
+## Solution. 
 
 Exercises ~~are~~ will be tagged with a different version each `v0.1-exercise`, `v0.1-solution`, `v0.2-exercise`, etc... The challenger tries to solve them in their own way and then checks its own solution with the proposed one.
 
 for running the game, checkout the latest aviable tag and compile. Example: `git checkout v1.4.0-improving-performance & stack run -- 40 60 200000` runs the snake game in the console with a 40x60 board and every step in the game happens every fifth of a second. (Notice that stack will download the compiler and libraries, etc... If you have the same version installed in your system, it'll be quick, otherwise go and prepare a coffee)
 
-### note about not using monads
-> By that I mean, not using do notation nor functor/applicative/monads combinators like `liftA2`, `fmap`, `>>=`, etc...
-> 
-> Obviously, The IO and the asynchronous part of the code is provided and the challenger is not expected to solve it.
 
 At the moment there are no exercises prepared, but if you are interested there are some tags already prepared to help my future me to design the challenge. run `git tag -l` to see a list of all the tags available
 
@@ -55,10 +56,6 @@ This is how the game looks in the terminal:
 
 This is how the game looks as a gui:
 ![](./assets/snake-gui.gif)
-
-## What this repo is *NOT*
-This is not a Haskell tutorial. The challenger is expected to know (at least a little) basic Haskell: syntax, recursion, algebraic data types and records. The challenger should take care about finding learning resources for those parts of the code he/she doesn't understand. Of course, it isn't mandatory to know them perfectly, and the challenge is intended to be difficult if you are a beginner... otherwise, I wouldn't be a challenge isn't it?
-
 
 
 ## Structure (TODO)
@@ -90,6 +87,10 @@ The following diagram helps to visualize
 
 ![Overview of the arquitecture](./assets/snake_arquitecture.png)
 
+
+## Set up a development environment
+
+I strongly recommend to use [ghcup](https://www.haskell.org/ghcup/) to manage your Haskell toolchain. Download it using the script given in the page. Once you got it, install `ghc`, `cabal` and `hls`
 
 ## Contributions
 The current state is not good for contributions, since I am still defining the overall structure of the challenge.
