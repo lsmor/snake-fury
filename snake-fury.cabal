@@ -1,3 +1,4 @@
+cabal-version:  3.0
 name:           snake-fury
 version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/lsmor/snake-fury#readme>
@@ -6,9 +7,8 @@ bug-reports:    https://github.com/lsmor/snake-fury/issues
 author:         Luis Morillo Najarro
 maintainer:     example@example.com
 copyright:      2021 Luis Morillo Najarro
-license:        BSD3
+license:        BSD-3-Clause
 license-file:   LICENSE
-cabal-version:  1.12
 build-type:     Simple
 extra-source-files:
     README.md
@@ -33,13 +33,13 @@ library
   default-extensions:
       StrictData
   build-depends:
-      base >=4.14
-    , BoundedChan >= 1.0.3.0
-    , array >= 0.5.4.0
-    , bytestring >= 0.10.12.0
-    , containers >= 0.6.5.1
-    , mtl >= 2.2.2
-    , random >= 1.2.0
+      base ^>=4.14
+    , BoundedChan ^>= 1.0.3.0
+    , array ^>= 0.5.4.0
+    , bytestring ^>= 0.10.12.0
+    , containers ^>= 0.6.5.1
+    , mtl ^>= 2.2.2
+    , random ^>= 1.2.0
   default-language: Haskell2010
 
 library gui
@@ -53,14 +53,14 @@ library gui
       StrictData
   build-depends:
       snake-fury
-    , sdl2 >= 2.5.3.0
-    , sdl2-ttf >= 2.1.2
-    , base >=4.14
-    , array >= 0.5.4.0
-    , mtl >= 2.2.2
-    , text >= 1.2
-    , linear >= 1.21.6
-    , BoundedChan >= 1.0.3.0
+    , sdl2 ^>= 2.5.3.0
+    , sdl2-ttf ^>= 2.1.2
+    , base ^>=4.14
+    , array ^>= 0.5.4.0
+    , mtl ^>= 2.2.2
+    , text ^>= 1.2
+    , linear ^>= 1.21.6
+    , BoundedChan ^>= 1.0.3.0
   default-language: Haskell2010
 
 executable snake-gui
@@ -75,9 +75,9 @@ executable snake-gui
   build-depends:
       snake-fury
     , gui
-    , base >=4.14
-    , sdl2 >= 2.5.3.0
-    , sdl2-ttf >= 2.1.2
+    , base ^>=4.14
+    , sdl2 ^>= 2.5.3.0
+    , sdl2-ttf ^>= 2.1.2
   default-language: Haskell2010
 
 executable snake-tui
@@ -91,12 +91,6 @@ executable snake-tui
   ghc-options: -threaded -rtsopts -Wall
   build-depends:
       base >=4.7 && <5
-    , BoundedChan
-    , array
-    , bytestring
-    , containers
-    , mtl
-    , random
     , snake-fury
   default-language: Haskell2010
 

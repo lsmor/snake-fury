@@ -27,7 +27,27 @@ Below there is a dramatization of Haskell's learning curve. This challenge aims 
 
 ## How to use this repository.
 
-If you don't have a working haskell developer environment go to [this section](#markdown-header-set-up-a-development-environment). You'll need git too. 
+If you don't have a working haskell developer environment go to section [Set up a development environment](#markdown-header-set-up-a-development-environment). You'll need git too. 
+
+There is a branch called `exercise-snake-fury` in which you'll find a template with empty functions. Notice that you'll need to create as many auxiliary functions as you need, so different people will come out with different solutions. Read carefully the comments to understand what you are asked to do. 
+
+I'd recommend to open a new branch based on this in case you mess up something. To set up the project do:
+
+```bash
+# Download the git project.
+git clone https://github.com/lsmor/snake-fury.git
+
+# move to project folder
+cd snake-fury
+
+# move to existing branch
+git checkout exercise-snake-fury
+
+# create a new branch based on exercise-snake-fury.
+git checkout -b mysolution-snake-fury
+```
+
+Now you are ready to start the coding. 
 
 ## Solution. 
 
