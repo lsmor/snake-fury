@@ -48,7 +48,7 @@ updateRenderState (RenderState b binf gOver) message =
 
 -- | Provisional Pretty printer
 ppCell :: CellType -> String
-ppCell Empty     = "· "
+ppCell Empty     = "- "
 ppCell Snake     = "0 "
 ppCell SnakeHead = "$ "
 ppCell Apple     = "X "
