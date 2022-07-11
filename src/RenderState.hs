@@ -48,10 +48,10 @@ updateRenderState (RenderState b binf gOver) message =
 
 -- | Provisional Pretty printer
 ppCell :: CellType -> String
-ppCell Empty     = "·"
-ppCell Snake     = "0"
-ppCell SnakeHead = "$"
-ppCell Apple     = "X"
+ppCell Empty     = "· "
+ppCell Snake     = "0 "
+ppCell SnakeHead = "$ "
+ppCell Apple     = "X "
 
 render :: RenderState -> String
 render (RenderState b binf@(BoardInfo h w) gOver) =
