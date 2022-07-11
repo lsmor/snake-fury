@@ -40,6 +40,7 @@ buildInitialBoard bInfo initSnake initApple =
   RenderState b bInfo False 
  where b = emptyGrid bInfo // [(initSnake, SnakeHead), (initApple, Apple)]
 
+-- | Given tye current render state, and a message -> update the render state
 updateRenderState :: RenderState -> RenderMessage -> RenderState
 updateRenderState (RenderState b binf gOver) message = 
   case message of
@@ -53,6 +54,8 @@ ppCell Snake     = "0 "
 ppCell SnakeHead = "$ "
 ppCell Apple     = "X "
 
+
+-- | convert the RenderState in a String ready to be flushed into the console.
 render :: RenderState -> String
 render (RenderState b binf@(BoardInfo h w) gOver) =
   if gOver

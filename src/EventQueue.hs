@@ -58,6 +58,7 @@ writeUserInput queue@(EventQueue userqueue _) = do
       "\ESC[B" -> tryWriteChan userqueue South >> writeUserInput queue
       _   -> writeUserInput queue
 
+-- | Read the EventQueue and generates an Event to pass to the user logic
 readEvent :: EventQueue -> IO Event
 readEvent (EventQueue userqueue _) = do
   mv <- tryReadChan userqueue

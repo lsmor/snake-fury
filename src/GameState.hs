@@ -25,13 +25,15 @@ data GameState = GameState
   }
   deriving (Show, Eq)
 
+-- | calculate the oposite movement. This is done because if snake is moving up
+-- We can not change direction to south.
 opositeMovement :: Movement -> Movement
 opositeMovement North = South
 opositeMovement South = North
 opositeMovement East = West
 opositeMovement West = East
 
--- Purely creates a random point within the board limits
+-- | Purely creates a random point within the board limits
 makeRandomPoint :: BoardInfo -> StdGen -> (Point, StdGen)
 makeRandomPoint (BoardInfo n i) sg = (newPoint , g1')
   where (g1, g2)  = split sg
@@ -39,11 +41,11 @@ makeRandomPoint (BoardInfo n i) sg = (newPoint , g1')
         (i', _) = uniformR (1, i) g2
         newPoint  = (n', i')
 
--- Check if a point is in the snake
+-- | Check if a point is in the snake
 inSnake :: Point -> SnakeSeq  -> Bool
 inSnake x0 (SnakeSeq x1 seq) = x0 == x1 || isJust (x0 `S.elemIndexL` seq)
 
--- Calculates de new head of the snake
+-- | Calculates de new head of the snake
 nextHead :: GameState -> Point
 nextHead (GameState (SnakeSeq (x, y) _) _ mov (BoardInfo h w) _) =
   case mov of
@@ -52,7 +54,7 @@ nextHead (GameState (SnakeSeq (x, y) _) _ mov (BoardInfo h w) _) =
     East  -> if y + 1  > w then (x, 1) else (x, y + 1)
     West  -> if y - 1 <= 0 then (x, w) else (x, y - 1)
 
--- Calculates a new random apple, avoiding creating the apple in the same place, or in the snake body
+-- | Calculates a new random apple, avoiding creating the apple in the same place, or in the snake body
 newApple :: GameState -> (Point, StdGen)
 newApple app@(GameState ss x0 move bi sg) =
     if x0' == x0 || x0' `inSnake` ss
@@ -61,6 +63,7 @@ newApple app@(GameState ss x0 move bi sg) =
   where (x0', sg') = makeRandomPoint bi sg
 
 
+-- | Moves the snake based on the current direction.
 move :: GameState -> (GameState, Board.RenderMessage)
 move s@(GameState (SnakeSeq oldHead sb) applePos _ _ g) =
   if isColision
