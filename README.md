@@ -1,3 +1,11 @@
+- [snake-fury](#snake-fury)
+  - [Introduction](#introduction)
+    - [note about not using monads](#note-about-not-using-monads)
+  - [Start coding](#start-coding)
+  - [Arquitecture](#arquitecture)
+  - [Solution.](#solution)
+  - [Set up a development environment](#set-up-a-development-environment)
+  - [Contributions](#contributions)
 # snake-fury
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/lsmor/snake-fury)
@@ -24,31 +32,61 @@ Below there is a dramatization of Haskell's learning curve. This challenge aims 
 > 
 > Obviously, The IO and the asynchronous part of the code are provided and the challenger is not expected to solve it.
 
-## How to use this repository.
+## Start coding
 
-The `main` branch is the one you should use as a reference.
+Be sure you have a haskell developement environment [up and running](#markdown-hearder-set-up-a-development-environment). If you don't want to install Haskell's toolchain yourself, you can use gitpod to quickly jump into an online environment. 
 
-If you don't have a working haskell developer environment go to section [Set up a development environment](#markdown-header-set-up-a-development-environment). You'll need git too. 
-
-There is a branch called `exercise-snake-fury` in which you'll find a template with empty functions. Notice that you'll need to create as many auxiliary functions as you need, so different people will come out with different solutions. Read carefully the comments to understand what you are asked to do. 
-
-I'd recommend to open a new branch based on this in case you mess up something. To set up the project do:
+Clone the code and move to `snake-fury-exercise1` branch . 
 
 ```bash
-# Download the git project.
 git clone https://github.com/lsmor/snake-fury.git
-
-# move to project folder
-cd snake-fury
-
-# move to existing branch
-git checkout exercise-snake-fury
-
-# create a new branch based on exercise-snake-fury.
-git checkout -b mysolution-snake-fury
+git checkout snake-fury-exercise
 ```
 
-Now you are ready to start the coding. 
+I'd recommend to create a branch for your solution (ex: `git checkout -b my-solution`) but you can use the given one. You'll find the following folder structure:
+
+```
+app
+ |- Main.hs            # Here is the entrypoint of your application. This is implemented for you
+src
+ |- EventQueue.hs      # Here is the EventQueue. This is implemented for you
+ |- GameState.hs       # here will go the logic of the game. You have to complete this file
+ |- RenderState.hs     # here will go the data structure for rendering the game. You have to complete this file
+ |- Initialization.hs  # some utility functions. You don't need to touch this file.
+exercises
+ |- refactor-1.md
+ |- refactor-2.md
+ |- refactor-3.md
+ |- refactor-4.md
+ |- refactor-5b.md
+```
+Each file correspond to each component in the system (and some utilities to keep code simpler). Be sure you read the about the (arquitecture)[#markdown-header-arquitecture] to understand why the code is splitted this way. Within files `GameState.hs` and `RenderState.hs` you have the exercises statements as comments. Notice that you'll need to implement as many auxiliar functions as you need to make it work. If you feel stuck you can check the [solution](#markdown-header-solution) I've implemented. It is totally fine if you implement a different one. 
+
+Once you fill those two files you'll have a minimum viable product. Now it is time to improve it!. In the `exercises` folder you have exercises for refactors. Follow them one by one as enumerated. One of the ideas is you feel the power of the type system when refactoring. 
+
+- **refactor-1**: you will move from you mvp to a full snake game with all the functionality
+- **refactor-2**: you will refactor the logic of the game to use the state monad. Hopefully you'll find code much easier to read.
+- **refactor-3**: you will refactor the logic of the game to use the reader + state monad stack. Probably you'll find code _harder_ read.
+- **refactor-4**: You will refactor the code to use `mtl` like constraints.
+- **refactor-5**: Finally, you'll refactor the code to be fully abstracted over the monad stack you use.
+
+## Arquitecture
+
+The general arquitecture of the software is the following:
+- There are three major components: 
+  - An Event Queue: It keeps a queue of the following events to happen in the game based on the user keyboard input
+  - A Game State: Is the logic state. It keeps track on the snake body, the current apple, the direction of movement, etc...
+  - A Render State: Is the game board. Instead of building up the board from the GameState, we keep an array in memory and modify it as convenient
+- Each compoment send a message to the next one in the following order: (user keyboard) -> EventQueue -> GameState -> RenderState -> (render device)
+- we have two threads. 
+    - The sencondary thread is continuously reading from users keyboard and pushing the key strokes into an asynchronous EventQueue
+    - The main thread reads at steady time from the EventQueue, and based on what the user has pressed, it runs the game logic and prints the board in the console
+
+Notice that two threads are necessary, since use can press keys faster than the game update. For example let say we run a frame each second and a half (normal speed in the snake game.), then a user is likely to press keys faster than that. If the key stroke are catch as the same speed the game runs, then many stroke will be lost. 
+
+The following diagram helps to visualize
+
+![Overview of the arquitecture](./assets/snake_arquitecture.png)
 
 ## Solution. 
 
@@ -77,36 +115,6 @@ This is how the game looks in the terminal:
 
 This is how the game looks as a gui:
 ![](./assets/snake-gui.gif)
-
-
-## Structure (TODO)
-
-
-- You'll be asked to implement some functionality.
-
-
-This challenge is divided in three parts:
-
-- Part One 
-
-
-## Arquitecture
-
-The general arquitecture of the software is the following:
-- There are three major components: 
-  - An Event Queue: It keeps a queue of the following events to happen in the game based on the user keyboard input
-  - A Game State: Is the logic state. It keeps track on the snake body, the current apple, the direction of movement, etc...
-  - A Render State: Is the game board. Instead of building up the board from the GameState, we keep an array in memory and modify it as convenient
-- Each compoment send a message to the next one in the following order: (user keyboard) -> EventQueue -> GameState -> RenderState -> (render device)
-- we have two threads. 
-    - The sencondary thread is continuously reading from users keyboard and pushing the key strokes into an asynchronous EventQueue
-    - The main thread reads at steady time from the EventQueue, and based on what the user has pressed, it runs the game logic and prints the board in the console
-
-Notice that two threads are necessary, since use can press keys faster than the game update. For example let say we run a frame each second and a half (normal speed in the snake game.), then a user is likely to press keys faster than that. If the key stroke are catch as the same speed the game runs, then many stroke will be lost. 
-
-The following diagram helps to visualize
-
-![Overview of the arquitecture](./assets/snake_arquitecture.png)
 
 
 ## Set up a development environment
