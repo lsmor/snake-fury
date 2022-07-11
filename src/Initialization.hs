@@ -2,7 +2,7 @@ module Initialization where
 
 
 import qualified RenderState
-import qualified Snake
+import qualified GameState as Snake
 import EventQueue (EventQueue (EventQueue))
 import qualified Data.Sequence as S
 import System.Random ( getStdGen, randomRIO )

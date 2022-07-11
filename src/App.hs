@@ -11,7 +11,7 @@ module App where
 import EventQueue ( EventQueue (speed, EventQueue), Event (Tick, UserEvent), calculateSpeed)
 import RenderState (BoardInfo, RenderMessage, RenderState)
 import qualified RenderState
-import Snake (GameState (movement), runStep, opositeMovement)
+import GameState (GameState (movement), runStep, opositeMovement)
 import Control.Monad.Reader (ReaderT, MonadReader )
 import Control.Monad.Reader.Class ( asks )
 import Control.Monad.IO.Class ( MonadIO (liftIO) )
@@ -81,11 +81,11 @@ instance (Monad m, MonadState AppState m) => MonadGame m where
     current_state <- gets gameState
     let (mgs, new_state) =
          case e of 
-          Tick -> Snake.runStep current_state   -- If it is a tick, just run a step
+          Tick -> GameState.runStep current_state   -- If it is a tick, just run a step
           UserEvent move ->                     -- If it is user event, modify the current direction acoordingly and run a step
-            if Snake.movement current_state == Snake.opositeMovement move
-              then Snake.runStep current_state
-              else Snake.runStep $ current_state {Snake.movement = move}
+            if movement current_state == opositeMovement move
+              then runStep current_state
+              else runStep $ current_state {movement = move}
     modify'$ \s -> s {gameState = new_state}
     return mgs
   

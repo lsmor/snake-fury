@@ -12,7 +12,7 @@ module TUI where
 -- In this module we define the functions needed to interact with the terminal.
 
 import EventQueue (EventQueue (EventQueue))
-import qualified Snake
+import qualified GameState as Snake
 import Control.Concurrent.BoundedChan (tryWriteChan)
 import System.IO (hReady, stdin, stdout)
 import qualified Data.ByteString.Builder as B

@@ -16,7 +16,7 @@ import Data.Word (Word8)
 import Foreign.C.Types (CInt)
 import Data.Array (assocs)
 import EventQueue (EventQueue(EventQueue))
-import qualified Snake
+import qualified GameState as Snake
 import Control.Concurrent.BoundedChan (tryWriteChan)
 import App (Config, HasConfig (getConfig), HasEventQueue (getQueue), AppT (runApp), AppState (renderState), MonadRender (render), updateQueueTime, gameStep)
 import Control.Monad.Reader

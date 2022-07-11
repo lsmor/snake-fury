@@ -5,7 +5,7 @@
 {-|
 This module defines the logic of the game and the communication with the `Board.RenderState`
 -}
-module Snake where
+module GameState where
 
 import RenderState (BoardInfo (..), Point, DeltaBoard)
 import qualified RenderState as Board

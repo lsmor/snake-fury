@@ -5,7 +5,7 @@ This module handle the external events of the game. That is: the user inputs and
 -}
 module EventQueue where
 
-import qualified Snake
+import qualified GameState as Snake
 import Control.Concurrent
     ( MVar )
 import Control.Concurrent.BoundedChan
