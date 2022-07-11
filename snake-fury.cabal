@@ -23,7 +23,7 @@ library
       App
       EventQueue
       RenderState
-      Snake
+      GameState
       TUI
       Initialization
   other-modules:
