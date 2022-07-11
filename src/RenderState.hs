@@ -7,54 +7,59 @@ This module defines the board and the score. It includes not only the rendering 
 -}
 module RenderState where
 
-import Data.Array ( (//), listArray, Array )
+import Data.Array ( (//), listArray, Array, elems )
+import Control.Monad ( foldM_ )
 import Data.Foldable ( foldl' )
+import Debug.Trace(trace)
 
--- | a Point is a pair of Ints
+
 type Point = (Int, Int)
+data CellType = Empty | Snake | SnakeHead | Apple deriving (Show, Eq)
 
--- | There are 4 type of CellType. Each CellType is drawn differently.
-data CellType = Empty | Snake | SnakeHead | Apple
-
--- | The height and width of the board
 data BoardInfo = BoardInfo {height :: Int, width :: Int} deriving (Show, Eq)
-
--- | The board is an Array of CellType. The array is not indexed by Int, but by Point (2D Int)
 type Board = Array Point CellType
-
--- | It represents a list of changes done in the board.
 type DeltaBoard = [(Point, CellType)]
 
--- | The `RenderState` includes all the information that affects rendering.
-data RenderState   = RenderState {board :: Board, info :: BoardInfo, gameOver :: Bool, score :: Int}
+data RenderMessage = RenderBoard DeltaBoard | GameOver
+data RenderState   = RenderState {board :: Board, info :: BoardInfo, gameOver :: Bool}
 
--- | The `RenderState` can be update in three ways
-data RenderMessage = RenderBoard DeltaBoard | GameOver | Score
-
--- | Creates the empty grid from its info
+-- | Creates the empty grip from its info
 emptyGrid :: BoardInfo -> Board
 emptyGrid (BoardInfo h w) = listArray boardBounds emptyCells
     where boardBounds =  ((1, 1), (h, w))
           emptyCells  = replicate (h*w) Empty
 
 -- | Given BoardInfo, init point of snake and init point of apple, builds a board
-buildInitialBoard
+buildInitialBoard 
   :: BoardInfo -- ^ Board size
   -> Point     -- ^ initial point of the snake
   -> Point     -- ^ initial Point of the apple
   -> RenderState
-buildInitialBoard bInfo initSnake initApple =
-  RenderState b bInfo False 0
+buildInitialBoard bInfo initSnake initApple = 
+  RenderState b bInfo False 
  where b = emptyGrid bInfo // [(initSnake, SnakeHead), (initApple, Apple)]
 
--- | updates a `RenderState` given a `RenderMessage`
 updateRenderState :: RenderState -> RenderMessage -> RenderState
-updateRenderState (RenderState b binf gOver s) message =
+updateRenderState (RenderState b binf gOver) message = 
   case message of
-    RenderBoard delta -> RenderState (b // delta) binf gOver s
-    GameOver          -> RenderState b binf True s
-    Score             -> RenderState b binf gOver (s + 1)
+    RenderBoard delta -> RenderState (b // delta) binf gOver
+    GameOver          -> RenderState b binf True
 
--- | extends `updateRenderState` to handle a list of messages
-updateMessages :: RenderState -> [RenderMessage] -> RenderState
-updateMessages = foldl' updateRenderState
+-- | Provisional Pretty printer
+ppCell :: CellType -> String
+ppCell Empty     = "·"
+ppCell Snake     = "0"
+ppCell SnakeHead = "$"
+ppCell Apple     = "X"
+
+render :: RenderState -> String
+render (RenderState b binf@(BoardInfo h w) gOver) =
+  if gOver
+    then fst $ boardToString(emptyGrid binf)
+    else fst $ boardToString b
+  where 
+    boardToString =  foldl' fprint ("", 0)
+    fprint (!s, !i) cell = 
+      if ((i + 1) `mod` w) == 0 
+        then (s <> ppCell cell <> "\n", i + 1 )
+        else (s <> ppCell cell , i + 1)
