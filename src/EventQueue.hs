@@ -34,11 +34,11 @@ calculateSpeed score initialSpeed =
 --   This action is mutable, therefore must be run in the IO mondad
 setSpeed :: Int -> EventQueue -> IO Int
 setSpeed s (EventQueue _ m_current initial_speed) = do
-  current_speed <- readMVar m_current   -- Read the current 
-  if new_speed == current_speed
-    then return current_speed
-    else swapMVar m_current new_speed >> return new_speed
- where new_speed = calculateSpeed s initial_speed
+  current_speed <- readMVar m_current                   -- Read the current reference to speed
+  let new_speed = calculateSpeed s initial_speed        -- calculate new speed based on the score. This is a pure calculation, hence the let at the begining
+  if new_speed == current_speed                   
+    then pure current_speed                             -- If the new speed is equal to the current one, just return it
+    else swapMVar m_current new_speed >> pure new_speed -- if not, swap the content of the reference with the new speed
 
 -- |---------------|
 -- |- User Inputs -|
