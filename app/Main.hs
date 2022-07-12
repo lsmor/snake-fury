@@ -5,7 +5,7 @@ module Main where
 import RenderState (RenderState, updateRenderState, render, BoardInfo)
 import GameState ( opositeMovement, GameState(movement), move )
 import EventQueue
-    ( EventQueue, Event(UserEvent, Tick), writeUserInput, readEvent )
+    ( EventQueue (initialSpeed), Event(UserEvent, Tick), writeUserInput, readEvent )
 import System.Environment (getArgs)
 import Control.Concurrent
     ( forkIO, threadDelay )
@@ -32,7 +32,7 @@ main = do
     -- Game Loop. We run two different threads, one for the gameloop (main) and one for user inputs.
     _ <- forkIO $ writeUserInput eventQueue
     let initialState = gameState
-    gameloop binf initialState renderState timeSpeed eventQueue
+    gameloop binf initialState renderState eventQueue
   where
     -- The game loop is easy:
     --   - wait some time
@@ -40,9 +40,9 @@ main = do
     --   - Update the GameState
     --   - Update the RenderState based on message delivered by GameState update
     --   - Render into the console
-    gameloop :: BoardInfo -> GameState -> RenderState -> Int -> EventQueue -> IO ()
-    gameloop binf app b timeSpeed queue = do
-        threadDelay timeSpeed
+    gameloop :: BoardInfo -> GameState -> RenderState -> EventQueue -> IO ()
+    gameloop binf app b queue = do
+        threadDelay $ initialSpeed queue
         event <- readEvent queue
         let (app',delta) =
               case event of
@@ -54,4 +54,4 @@ main = do
         let board' = updateRenderState binf b delta
         putStr "\ESC[2J"       --This cleans the console screen
         putStr $ render binf board'
-        gameloop binf app' board' timeSpeed queue
+        gameloop binf app' board' queue
