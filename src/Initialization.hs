@@ -22,14 +22,14 @@ inititalizePoints h w = do
     else return (snakeInit, appleInit)
 
 -- | given the initial parameters height, width and initial time, It creates the initial state, the initial render state and the event queue
-gameInitialization :: Int -> Int -> Int -> IO (Snake.GameState, RenderState.RenderState , EventQueue)
+gameInitialization :: Int -> Int -> Int -> IO (RenderState.BoardInfo, Snake.GameState, RenderState.RenderState , EventQueue)
 gameInitialization hight width initialspeed = do
   (snakeInit, appleInit) <- inititalizePoints hight width
   sg <- getStdGen
   newUserEventQueue <- newBoundedChan 3
   newSpeed <- newMVar initialspeed
   let binf = RenderState.BoardInfo hight width
-      gameState = Snake.GameState (Snake.SnakeSeq snakeInit S.Empty) appleInit Snake.North binf sg
+      gameState = Snake.GameState (Snake.SnakeSeq snakeInit S.Empty) appleInit Snake.North sg
       renderState = RenderState.buildInitialBoard binf snakeInit appleInit
       eventQueue = EventQueue newUserEventQueue newSpeed
-  return (gameState, renderState, eventQueue)
+  return (binf, gameState, renderState, eventQueue)

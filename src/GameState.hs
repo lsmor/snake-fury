@@ -1,7 +1,3 @@
-{-# LANGUAGE MultiWayIf #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-
 {-|
 This module defines the logic of the game and the communication with the `Board.RenderState`
 -}
@@ -20,7 +16,7 @@ data GameState = GameState
   { snakeSeq :: SnakeSeq
   , applePosition :: Point
   , movement :: Movement
-  , boardInfo :: BoardInfo
+  --, boardInfo :: BoardInfo
   , randomGen :: StdGen
   }
   deriving (Show, Eq)
@@ -46,8 +42,8 @@ inSnake :: Point -> SnakeSeq  -> Bool
 inSnake x0 (SnakeSeq x1 seq) = x0 == x1 || isJust (x0 `S.elemIndexL` seq)
 
 -- | Calculates de new head of the snake
-nextHead :: GameState -> Point
-nextHead (GameState (SnakeSeq (x, y) _) _ mov (BoardInfo h w) _) =
+nextHead :: BoardInfo -> GameState -> Point
+nextHead (BoardInfo h w) (GameState (SnakeSeq (x, y) _) _ mov _) =
   case mov of
     North -> if x - 1 <= 0 then (h, y) else (x - 1, y)
     South -> if x + 1  > h then (1, y) else (x + 1, y)
@@ -55,17 +51,17 @@ nextHead (GameState (SnakeSeq (x, y) _) _ mov (BoardInfo h w) _) =
     West  -> if y - 1 <= 0 then (x, w) else (x, y - 1)
 
 -- | Calculates a new random apple, avoiding creating the apple in the same place, or in the snake body
-newApple :: GameState -> (Point, StdGen)
-newApple app@(GameState ss x0 move bi sg) =
+newApple :: BoardInfo -> GameState -> (Point, StdGen)
+newApple bi app@(GameState ss x0 move sg) =
     if x0' == x0 || x0' `inSnake` ss
-      then newApple app{randomGen = sg'}
+      then newApple bi app{randomGen = sg'}
       else (x0', sg')
   where (x0', sg') = makeRandomPoint bi sg
 
 
 -- | Moves the snake based on the current direction.
-move :: GameState -> (GameState, Board.RenderMessage)
-move s@(GameState (SnakeSeq oldHead sb) applePos _ _ g) =
+move :: BoardInfo -> GameState -> (GameState, Board.RenderMessage)
+move bi s@(GameState (SnakeSeq oldHead sb) applePos _ g) =
   if isColision
     then (s, Board.GameOver)
     else 
@@ -100,7 +96,7 @@ move s@(GameState (SnakeSeq oldHead sb) applePos _ _ g) =
                   delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (t, Board.Empty)]
               in (newState, Board.RenderBoard delta)
 
-  where newHead           = nextHead s
+  where newHead           = nextHead bi s
         isColision        = newHead `elem` sb
         isEatingApple     = newHead == applePos
-        (newApplePos, g') = newApple s
+        (newApplePos, g') = newApple bi s

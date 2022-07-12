@@ -22,7 +22,7 @@ type Board = Array Point CellType
 type DeltaBoard = [(Point, CellType)]
 
 data RenderMessage = RenderBoard DeltaBoard | GameOver
-data RenderState   = RenderState {board :: Board, info :: BoardInfo, gameOver :: Bool}
+data RenderState   = RenderState {board :: Board, gameOver :: Bool}
 
 -- | Creates the empty grip from its info
 emptyGrid :: BoardInfo -> Board
@@ -37,15 +37,15 @@ buildInitialBoard
   -> Point     -- ^ initial Point of the apple
   -> RenderState
 buildInitialBoard bInfo initSnake initApple = 
-  RenderState b bInfo False 
+  RenderState b False 
  where b = emptyGrid bInfo // [(initSnake, SnakeHead), (initApple, Apple)]
 
 -- | Given tye current render state, and a message -> update the render state
-updateRenderState :: RenderState -> RenderMessage -> RenderState
-updateRenderState (RenderState b binf gOver) message = 
+updateRenderState :: BoardInfo -> RenderState -> RenderMessage -> RenderState
+updateRenderState binf (RenderState b gOver) message = 
   case message of
-    RenderBoard delta -> RenderState (b // delta) binf gOver
-    GameOver          -> RenderState b binf True
+    RenderBoard delta -> RenderState (b // delta) gOver
+    GameOver          -> RenderState b  True
 
 -- | Provisional Pretty printer
 ppCell :: CellType -> String
@@ -56,8 +56,8 @@ ppCell Apple     = "X "
 
 
 -- | convert the RenderState in a String ready to be flushed into the console.
-render :: RenderState -> String
-render (RenderState b binf@(BoardInfo h w) gOver) =
+render :: BoardInfo -> RenderState -> String
+render binf@(BoardInfo h w) (RenderState b gOver) =
   if gOver
     then fst $ boardToString(emptyGrid binf)
     else fst $ boardToString b
