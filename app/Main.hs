@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE NumericUnderscores #-}
 module Main where
 
 import RenderState (RenderState, updateRenderState, render, BoardInfo)
@@ -22,7 +24,9 @@ main = do
     hSetBinaryMode stdout True
 
     -- Game Initializacion
-    [h, w, timeSpeed] <- fmap read <$> getArgs
+    [h, w, fps] <- fmap read <$> getArgs
+    let timeSpeed = 1_000_000 `div` fps  -- One second is 1_000_000 microseconds, which is the unit used by GHC internally. 
+ 
     (binf, gameState, renderState, eventQueue) <- gameInitialization h w timeSpeed
 
     -- Game Loop. We run two different threads, one for the gameloop (main) and one for user inputs.
