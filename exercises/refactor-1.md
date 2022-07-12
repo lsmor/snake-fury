@@ -20,6 +20,35 @@ you will update the code to make an score which is updated each time the snake e
 
 In this part you'll be asked to modify some code of the `EventQueue`, which runs in the `IO` monad. So we can say that this will be your first contact with monads. Congrats!. The only problem is that `EventQueue` is an asynchronous queue of events, so it can be a little bit too much for your first contact. Read carefully and don't worry if you need to sneek out the solution doing `git checkout solution-refactor-1`. 
 
-### Task 2.1: Change the `EventQueue` record
+### Task 2.1: Change the `EventQueue` speed
 
--- Add two fields
+- Take a look at functions `EventQueue.calculateSpeed` and `EventQueue.setSpeed`. The former is a pure function which calculates the speed given the score and the initial speed. The second is a function in the `IO` monad. Try to understand it as better as you can, but don't worry if you can't fully understand it.
+- Take a look at function `Main.gameloop`. The first line looks like `threadDelay $ initialSpeed queue`. Let's go step by step: `initialSpeed queue` access the `initialSpeed` field within the `EventQueue`. Unsurprisingly, this is the speed you set up when running the code. `threadDelay` essentialy stops the execution for a given number of microseconds. Therefore, this function looks at the speed you set when initializing the game and waits that much time.
+- Your mission is to modify that part of the code to get the speed based on the `score` and wait that much time. Two changes are needed
+  - the first line now should modify the speed. Use the function `setSpeed`. Given the right arguments it returns the new speed _in a monadic context!_. To access that value you have to _bind_ it: `new_speed <- setSpeed <args>`
+  - Modify the second line (`threadDelay $ initialSpeed queue`) so now you wait the right amount of seconds.
+
+Now if you compile the code, you should notice that every 10 points the speed increases by a 10%.
+
+## Part 3: Performance issues
+
+If you run a big enough board or at high speed, you'll notice that the game start to blink, or the board is rendered slowly. This is because function `render` returns a `String`. This type is an historical mistake within Haskell ecosystem and should be banned. Unfortunately, this would break lot of code, so we have to live with that. `String` is a linked list of `Char` which is a very inefficient way of representing textual data. You should never use `String`... never!. There are other many representations of textual data such that `Text` (utf-8), `ByteString` (raw bytes decoded as ascii), `Builder` (a buffer in memory), and lazy variations of each. Yes, the Haskell ecosystem for textual data is a mess.
+
+For this challenge we are going to use a not very common representation of text: `ByteString.Builder`. The reason for that is because we are transforming the `RenderState` by concatenating strings text. `Builder` is very efficient type for concatenation. 
+
+
+### Task 3.1: Render the score.
+
+- Read the documentation of `Data.ByteString.Builder` from `bytestring` package.
+- Create function `ppScore :: Int -> Builder` which pretty prints the score. Feel free to use a representation you like. Below you have some examples
+- Modify the function `render` to have type `:: RenderState -> Builder`. Of course, the render function should plot the score and the board itself
+
+Here are some ways you can render the score:
+
+```bash
+# With stars lines    # With a board    # With motivation quote changing every 10 points
+                                      
+********              |--------|        score:  5 / do better!
+score:10              |score:10|        score:  10 / keep going!
+********              |--------|        score:  20 / on fire!
+```
