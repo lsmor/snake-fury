@@ -2,6 +2,7 @@
   - [Introduction](#introduction)
     - [note about not using monads](#note-about-not-using-monads)
   - [Start coding](#start-coding)
+  - [Building and Running](#building-and-running)
   - [Arquitecture](#arquitecture)
   - [Solution.](#solution)
   - [Set up a development environment](#set-up-a-development-environment)
@@ -69,6 +70,35 @@ Once you fill those two files you'll have a minimum viable product. Now it is ti
 - **refactor-3**: you will refactor the logic of the game to use the reader + state monad stack. Probably you'll find code _harder_ read.
 - **refactor-4**: You will refactor the code to use `mtl` like constraints.
 - **refactor-5**: Finally, you'll refactor the code to be fully abstracted over the monad stack you use.
+
+## Building and Running
+
+This project is prepare for both `cabal` and `stack`. At the moment the only major difference between this tools is the building plan. If you are a newcommer, you'll find `stack` slightly easier to use, but cabal is also fairly easy. Even if you are using `stack` this repository wont allow it to install `ghc`, you need to have it installed in your `PATH`. Check [this](#set-up-a-development-environment) section for more information.
+
+Notice the `main` branch is experimental and can change (even into a non-compilable code), so don't use it to build the project. For stable branches, use `solution-xxx`. To run the executable, you have to build first with either `cabal` or `stack` using. 
+
+```bash
+git checkout solution-xxx
+
+# cabal users
+cabal build
+
+# stack users
+stack build
+```
+
+To run it, you have to pass the height, width and fps (consider playing in a range from 5 to 15 fps)
+
+```bash
+# cabal users. 7 fps is a normal speed for snake game
+cabal run snake-fury -- 10 10 7
+
+# stack users. 7 fps is a normal speed for snake game
+stack run snake-fury -- 10 10 7
+```
+
+> note: At the moment the `main` branch doesn't use frames per second but microseconds as input parameter. Hence `cabal run snake-fury -- 10 10 100000` will run at 10 fps. In the exercise branch, the input parameter is correct. So if you want to build from `main` be aware of this change
+
 
 ## Arquitecture
 
