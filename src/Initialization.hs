@@ -31,5 +31,5 @@ gameInitialization hight width initialspeed = do
   let binf = RenderState.BoardInfo hight width
       gameState = Snake.GameState (Snake.SnakeSeq snakeInit S.Empty) appleInit Snake.North sg
       renderState = RenderState.buildInitialBoard binf snakeInit appleInit
-      eventQueue = EventQueue newUserEventQueue newSpeed
+      eventQueue = EventQueue newUserEventQueue newSpeed initialspeed
   return (binf, gameState, renderState, eventQueue)

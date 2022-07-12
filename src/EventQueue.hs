@@ -7,7 +7,7 @@ module EventQueue where
 
 import qualified GameState as Snake
 import Control.Concurrent
-    ( MVar )
+    ( MVar, readMVar, swapMVar )
 import Control.Concurrent.BoundedChan
     ( BoundedChan, tryWriteChan, tryReadChan )
 import System.IO (hReady, stdin)
@@ -20,8 +20,8 @@ data Event = Tick | UserEvent Snake.Movement
 -- | the `UserInputQueue` is an asynchronous bounded channel which contains snake movements. This channel is feeded by key strokes
 type UserInputQueue = BoundedChan Snake.Movement
 
--- | The `EventQueue` has a `TimeQueue` a `UserInputQueue` and the global speed of consumption. The speed is represented by the current speed
-data EventQueue = EventQueue {userInput :: UserInputQueue, speed :: MVar Int}
+-- | The `EventQueue` has a `UserInputQueue` and the global speed of consumption (as a mutable reference) and the initial speed of the game.
+data EventQueue = EventQueue {userInput :: UserInputQueue, currentSpeed :: MVar Int, initialSpeed :: Int}
 
 -- | Given the current score, updates the global shared speed every 10 points by a factor of 10%. Returns the current state
 calculateSpeed :: Int -> Int -> Int
@@ -30,6 +30,15 @@ calculateSpeed score initialSpeed =
         speedFactor = 1 - fromIntegral level / 10.0 -- every level speeds up the time by a 10%
      in floor @Double $ fromIntegral initialSpeed * speedFactor
 
+-- | Given the current score and the event queue, updates the new speed and returns it. 
+--   This action is mutable, therefore must be run in the IO mondad
+setSpeed :: Int -> EventQueue -> IO Int
+setSpeed s (EventQueue _ m_current initial_speed) = do
+  current_speed <- readMVar m_current   -- Read the current 
+  if new_speed == current_speed
+    then return current_speed
+    else swapMVar m_current new_speed >> return new_speed
+ where new_speed = calculateSpeed s initial_speed
 
 -- |---------------|
 -- |- User Inputs -|
@@ -49,7 +58,7 @@ getKey = reverse <$> getKey' ""
 -- This is intented for the game play, If we press keys faster than the game speed
 -- they will be enqueued and pushed into the game with delay. 
 writeUserInput :: EventQueue -> IO ()
-writeUserInput queue@(EventQueue userqueue _) = do
+writeUserInput queue@(EventQueue userqueue _ _) = do
     c <- getKey
     case c of
       "\ESC[A" -> tryWriteChan userqueue North >> writeUserInput queue -- \ESC[A/D/C/B are the escape codes for the arrow keys.
@@ -60,7 +69,7 @@ writeUserInput queue@(EventQueue userqueue _) = do
 
 -- | Read the EventQueue and generates an Event to pass to the user logic
 readEvent :: EventQueue -> IO Event
-readEvent (EventQueue userqueue _) = do
+readEvent (EventQueue userqueue _ _) = do
   mv <- tryReadChan userqueue
   case mv of
     Nothing -> pure Tick
