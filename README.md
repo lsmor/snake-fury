@@ -68,7 +68,7 @@ Once you fill those two files you'll have a minimum viable product. Now it is ti
 - **refactor-1**: you will move from you mvp to a full snake game with all the functionality
 - **refactor-2**: you will refactor the logic of the game to use the state monad. Hopefully you'll find code much easier to read.
 - **refactor-3**: you will refactor the logic of the game to use the reader + state monad stack. Probably you'll find code _harder_ read.
-- **refactor-4**: You will refactor the code to use `mtl` like constraints.
+- **refactor-4**: You will refactor the code to use `mtl` like constraints. Now code looks a little bit abstract but it is easy to read and follow
 - **refactor-5**: Finally, you'll refactor the code to be fully abstracted over the monad stack you use.
 
 ## Building and Running
