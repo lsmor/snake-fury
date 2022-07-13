@@ -1,7 +1,8 @@
+{-# LANGUAGE MultiWayIf #-}
 {-|
 This module defines the logic of the game and the communication with the `Board.RenderState`
 -}
-module GameState where 
+module GameState where
 
 import RenderState (BoardInfo (..), Point, DeltaBoard)
 import qualified RenderState as Board
@@ -58,45 +59,32 @@ newApple bi gstate@(GameState ss old_apple move sg) =
       else (new_apple, gstate{applePosition = new_apple})
   where (new_apple, gstate') = makeRandomPoint bi gstate
 
+-- | move the snake's head forward without removing the tail. (This is the case of eating an apple)
+extendSnake ::  Point -> BoardInfo -> GameState -> (DeltaBoard, GameState)
+extendSnake new_head binfo gstate@(GameState (SnakeSeq old_head snake_body) apple movement sg) = (delta, gstate {snakeSeq = new_snake})
+ where new_snake = SnakeSeq new_head (old_head :<| snake_body)
+       delta     = [(new_head, Board.SnakeHead), (old_head, Board.Snake)]
+
+-- | displace snake, that is: remove the tail and move the head forward (This is the case of eating an apple)
+displaceSnake :: Point -> BoardInfo -> GameState -> (DeltaBoard, GameState)
+displaceSnake new_head binfo gstate@(GameState (SnakeSeq old_head snake_body) apple movement sg) =
+  case snake_body of
+    S.Empty -> let new_snake = SnakeSeq new_head S.empty
+                   delta = [(new_head, Board.SnakeHead), (old_head, Board.Empty)]
+                in (delta , gstate {snakeSeq = new_snake})
+    xs :|> t -> let new_snake = SnakeSeq new_head (old_head :<| xs)
+                    delta = [(new_head, Board.SnakeHead), (old_head, Board.Snake), (t, Board.Empty)]
+                 in (delta, gstate {snakeSeq = new_snake})
 
 -- | Moves the snake based on the current direction.
 move :: BoardInfo -> GameState -> ([Board.RenderMessage], GameState)
-move bi gstate@(GameState (SnakeSeq oldHead sb) applePos _ g) =
-  if isColision
-    then ([Board.GameOver], gstate)
-    else 
-      case isEatingApple of
-        True ->
-          case sb of
-            S.Empty ->
-              let newSnake = SnakeSeq newHead (S.singleton oldHead)
-                  newState = gstate{snakeSeq = newSnake}
-                  delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (newApplePos, Board.Apple)]
-              in ([Board.RenderBoard delta, Board.Score], newState)
-            xs ->
-              let newSnake = SnakeSeq newHead (oldHead :<| xs)
-                  newState = gstate{snakeSeq = newSnake}
-                  delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (newApplePos, Board.Apple)]
-              in ([Board.RenderBoard delta, Board.Score], newState)
-        False ->
-          case sb of
-            S.Empty ->
-              let newSnake = SnakeSeq newHead S.empty
-                  newState = gstate{snakeSeq = newSnake}
-                  delta = [(newHead, Board.SnakeHead), (oldHead, Board.Empty)]
-              in ([Board.RenderBoard delta], newState)
-            x :<| S.Empty  ->
-              let newSnake = SnakeSeq newHead (S.singleton oldHead)
-                  newState = gstate{snakeSeq = newSnake}
-                  delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (x, Board.Empty)]
-              in ([Board.RenderBoard delta], newState)
-            x :<| (xs :|> t)  ->
-              let newSnake = SnakeSeq newHead (oldHead :<| x :<| xs)
-                  newState = gstate{snakeSeq = newSnake}
-                  delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (t, Board.Empty)]
-              in ([Board.RenderBoard delta], newState)
-
+move bi gstate@(GameState s applePos _ _) =
+  if | isColision -> ([Board.GameOver], gstate)
+     | isEatingApple -> let (delta, gstate') = extendSnake newHead bi gstate
+                            (newApplePos, gstate'') = newApple bi gstate'
+                            delta' = (newApplePos, Board.Apple):delta
+                         in ([Board.RenderBoard delta', Board.Score], gstate'')
+     | otherwise -> let (delta, gstate') = displaceSnake newHead bi gstate in ([Board.RenderBoard delta], gstate')
   where newHead           = nextHead bi gstate
-        isColision        = newHead `elem` sb
+        isColision        = newHead `elem` snakeBody s
         isEatingApple     = newHead == applePos
-        (newApplePos, gstate') = newApple bi gstate
