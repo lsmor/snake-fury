@@ -28,7 +28,7 @@ gameloop :: BoardInfo -> GameState -> RenderState -> EventQueue -> IO ()
 gameloop binf gstate rstate queue = do
   threadDelay $ initialSpeed queue
   event <- readEvent queue
-  let (gstate', delta) =
+  let (delta, gstate') =
         case event of
           Tick -> move binf gstate
           UserEvent m ->

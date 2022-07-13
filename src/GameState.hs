@@ -60,10 +60,10 @@ newApple bi app@(GameState ss x0 move sg) =
 
 
 -- | Moves the snake based on the current direction.
-move :: BoardInfo -> GameState -> (GameState, Board.RenderMessage)
+move :: BoardInfo -> GameState -> (Board.RenderMessage , GameState)
 move bi s@(GameState (SnakeSeq oldHead sb) applePos _ g) =
   if isColision
-    then (s, Board.GameOver)
+    then (Board.GameOver, s)
     else 
       case isEatingApple of
         True ->
@@ -72,29 +72,29 @@ move bi s@(GameState (SnakeSeq oldHead sb) applePos _ g) =
               let newSnake = SnakeSeq newHead (S.singleton oldHead)
                   newState = s {snakeSeq = newSnake, applePosition = newApplePos, randomGen = g'}
                   delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (newApplePos, Board.Apple)]
-              in (newState,  Board.RenderBoard delta)
+              in (Board.RenderBoard delta, newState)
             xs ->
               let newSnake = SnakeSeq newHead (oldHead :<| xs)
                   newState = s {snakeSeq = newSnake, applePosition = newApplePos, randomGen = g'}
                   delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (newApplePos, Board.Apple)]
-              in (newState, Board.RenderBoard delta)
+              in (Board.RenderBoard delta, newState)
         False ->
           case sb of
             S.Empty ->
               let newSnake = SnakeSeq newHead S.empty
                   newState = s {snakeSeq = newSnake}
                   delta = [(newHead, Board.SnakeHead), (oldHead, Board.Empty)]
-              in (newState, Board.RenderBoard delta)
+              in (Board.RenderBoard delta, newState)
             x :<| S.Empty  ->
               let newSnake = SnakeSeq newHead (S.singleton oldHead)
                   newState = s {snakeSeq = newSnake}
                   delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (x, Board.Empty)]
-              in (newState, Board.RenderBoard delta)
+              in (Board.RenderBoard delta, newState)
             x :<| (xs :|> t)  ->
               let newSnake = SnakeSeq newHead (oldHead :<| x :<| xs)
                   newState = s {snakeSeq = newSnake}
                   delta = [(newHead, Board.SnakeHead), (oldHead, Board.Snake), (t, Board.Empty)]
-              in (newState, Board.RenderBoard delta)
+              in (Board.RenderBoard delta, newState)
 
   where newHead           = nextHead bi s
         isColision        = newHead `elem` sb
