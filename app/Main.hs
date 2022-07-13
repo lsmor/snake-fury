@@ -30,7 +30,7 @@ gameloop binf gstate rstate queue = do
   new_speed <- setSpeed (score rstate) queue
   threadDelay new_speed
   event <- readEvent queue
-  let (gstate', delta) =
+  let (delta, gstate') =
         case event of
           Tick -> move binf gstate
           UserEvent m ->
