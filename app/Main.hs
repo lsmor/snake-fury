@@ -17,6 +17,7 @@ import Initialization (gameInitialization)
 import RenderState (BoardInfo, RenderState, render, updateRenderState)
 import System.Environment (getArgs)
 import System.IO (BufferMode (NoBuffering), hSetBinaryMode, hSetBuffering, hSetEcho, stdin, stdout)
+import qualified Data.ByteString.Builder as B
 
 -- The game loop is easy:
 --   - wait some time
@@ -37,7 +38,7 @@ gameloop binf app b queue = do
               else move binf $ app{movement = m}
   let board' = updateRenderState b delta
   putStr "\ESC[2J" --This cleans the console screen
-  putStr $ render binf board'
+  B.hPutBuilder stdout $ render binf board'
   gameloop binf app' board' queue
 
 -- | main.
