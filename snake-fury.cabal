@@ -52,5 +52,6 @@ executable snake-fury
   build-depends:
       base >=4.7 && <5
     , snake-fury
+    , bytestring ^>= 0.10.12.0
   default-language: Haskell2010
 
