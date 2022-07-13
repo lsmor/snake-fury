@@ -8,7 +8,7 @@ import RenderState (BoardInfo (..), Point, DeltaBoard)
 import qualified RenderState as Board
 import Data.Sequence ( Seq(..))
 import qualified Data.Sequence as S
-import System.Random ( uniformR, RandomGen(split), StdGen, Random (randomR) )
+import System.Random ( uniformR, RandomGen(split), StdGen, Random (randomR), mkStdGen )
 import Data.Maybe (isJust)
 
 data Movement = North | South | East | West deriving (Show, Eq)
@@ -61,7 +61,7 @@ newApple bi gstate@(GameState ss old_apple move sg) =
 
 -- | move the snake's head forward without removing the tail. (This is the case of eating an apple)
 extendSnake ::  Point -> BoardInfo -> GameState -> (DeltaBoard, GameState)
-extendSnake new_head binfo gstate@(GameState (SnakeSeq old_head snake_body) apple movement sg) = (delta, gstate {snakeSeq = new_snake})
+extendSnake new_head binfo gstate@(GameState (SnakeSeq old_head snake_body) _ _ _) = (delta, gstate {snakeSeq = new_snake})
  where new_snake = SnakeSeq new_head (old_head :<| snake_body)
        delta     = [(new_head, Board.SnakeHead), (old_head, Board.Snake)]
 
@@ -76,6 +76,10 @@ displaceSnake new_head binfo gstate@(GameState (SnakeSeq old_head snake_body) ap
                     delta = [(new_head, Board.SnakeHead), (old_head, Board.Snake), (t, Board.Empty)]
                  in (delta, gstate {snakeSeq = new_snake})
 
+-- >>> extendSnake (9, 5) (BoardInfo 10 10) (GameState (SnakeSeq {snakeHead = (8,5), snakeBody = S.fromList [(7,5)]}) (10,5) South (mkStdGen 5))
+-- ([((9,5),SnakeHead),((8,5),Snake)],GameState {snakeSeq = SnakeSeq {snakeHead = (9,5), snakeBody = fromList [(8,5),(7,5)]}, applePosition = (10,5), movement = South, randomGen = StdGen {unStdGen = SMGen 15450398106449630581 7134611160154358619}})
+
+
 -- | Moves the snake based on the current direction.
 move :: BoardInfo -> GameState -> ([Board.RenderMessage], GameState)
 move bi gstate@(GameState s applePos _ _) =
@@ -84,7 +88,11 @@ move bi gstate@(GameState s applePos _ _) =
                             (newApplePos, gstate'') = newApple bi gstate'
                             delta' = (newApplePos, Board.Apple):delta
                          in ([Board.RenderBoard delta', Board.Score], gstate'')
-     | otherwise -> let (delta, gstate') = displaceSnake newHead bi gstate in ([Board.RenderBoard delta], gstate')
+     | otherwise -> let (delta, gstate') = displaceSnake newHead bi gstate 
+                     in ([Board.RenderBoard delta], gstate')
   where newHead           = nextHead bi gstate
-        isColision        = newHead `elem` snakeBody s
+        isColision        = newHead `inSnake` s
         isEatingApple     = newHead == applePos
+
+-- >>> move (BoardInfo 10 10) (GameState (SnakeSeq {snakeHead = (9,5), snakeBody = S.fromList [(8,5)]}) (10,5) South (mkStdGen 5))
+-- ([RenderBoard [((9,6),Apple),((10,5),SnakeHead),((9,5),Snake)],Score],GameState {snakeSeq = SnakeSeq {snakeHead = (10,5), snakeBody = fromList [(9,5),(8,5)]}, applePosition = (9,6), movement = South, randomGen = StdGen {unStdGen = SMGen 15450398106449630581 7134611160154358619}})

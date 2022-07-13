@@ -22,7 +22,7 @@ data BoardInfo = BoardInfo {height :: Int, width :: Int} deriving (Show, Eq)
 type Board = Array Point CellType
 type DeltaBoard = [(Point, CellType)]
 
-data RenderMessage = RenderBoard DeltaBoard | GameOver | Score
+data RenderMessage = RenderBoard DeltaBoard | GameOver | Score deriving (Show, Eq)
 data RenderState   = RenderState {board :: Board, gameOver :: Bool, score :: Int}
 
 -- | Creates the empty grip from its info
