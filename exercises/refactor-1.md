@@ -28,7 +28,7 @@ In this part you'll be asked to modify some code of the `EventQueue`, which runs
   - the first line now should modify the speed. Use the function `setSpeed`. Given the right arguments it returns the new speed _in a monadic context!_. To access that value you have to _bind_ it: `new_speed <- setSpeed <args>`
   - Modify the second line (`threadDelay $ initialSpeed queue`) so now you wait the right amount of seconds.
 
-Now if you compile the code, you should notice that every 10 points the speed increases by a 10%.
+Now if you compile the code, you should notice that every 10 points the speed increases by a 10%. You can tweak this configuration in the `EventQueue.calculateSpeed` function.
 
 ## Part 3: Performance issues
 
