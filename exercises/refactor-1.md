@@ -1,3 +1,11 @@
+- [Refactor 1: from mpv to full game](#refactor-1-from-mpv-to-full-game)
+  - [Part 1: Add score](#part-1-add-score)
+    - [Task 1.1: Introduce a `score` field](#task-11-introduce-a-score-field)
+    - [Task 1.2: Update the score](#task-12-update-the-score)
+  - [Part 2: Increase the speed every 10 scores up to 5 speed-ups.](#part-2-increase-the-speed-every-10-scores-up-to-5-speed-ups)
+    - [Task 2.1: Change the `EventQueue` speed](#task-21-change-the-eventqueue-speed)
+  - [Part 3: Performance issues](#part-3-performance-issues)
+    - [Task 3.1: Render the score.](#task-31-render-the-score)
 # Refactor 1: from mpv to full game
 
 In this refactor you'll modify the code to add a score board and to accelerate snake's speed as you get points. Also we'll point out a performance problem with the renderer. Your mission is to solve it.
@@ -15,6 +23,7 @@ you will update the code to make an score which is updated each time the snake e
 - Because `score` is used in `RenderState` we need to update it via `RenderMessage`. Add a new case in the `RenderMessage` ADT to represent such message. Does the compiler complain about incomplete patterns? Which function/s is broken after this change?
 - If you think carefully, we need to change `GameState.move` function, because now there are cases in which we need to send more than one message. Update the code to send a list of messages after each move. 
 - Now, something is broken... we used to proccess a single message in `RenderState.updateRenderState`. Create a new function `updateMessages :: RenderState -> [RenderMessage] -> RenderState` which updates the state given many messages. hint: it can be a one-line function.
+- clean errors the compiler gives if any. 
 
 ## Part 2: Increase the speed every 10 scores up to 5 speed-ups.
 
@@ -27,6 +36,7 @@ In this part you'll be asked to modify some code of the `EventQueue`, which runs
 - Your mission is to modify that part of the code to get the speed based on the `score` and wait that much time. Two changes are needed
   - the first line now should modify the speed. Use the function `setSpeed`. Given the right arguments it returns the new speed _in a monadic context!_. To access that value you have to _bind_ it: `new_speed <- setSpeed <args>`
   - Modify the second line (`threadDelay $ initialSpeed queue`) so now you wait the right amount of seconds.
+- clean errors the compiler gives if any. 
 
 Now if you compile the code, you should notice that every 10 points the speed increases by a 10%. You can tweak this configuration in the `EventQueue.calculateSpeed` function.
 
@@ -36,12 +46,12 @@ If you run a big enough board or at high speed, you'll notice that the game star
 
 For this challenge we are going to use a not very common representation of text: `ByteString.Builder`. The reason for that is because we are transforming the `RenderState` by concatenating strings text. `Builder` is very efficient type for concatenation. 
 
-
 ### Task 3.1: Render the score.
 
 - Read the documentation of `Data.ByteString.Builder` from `bytestring` package.
 - Create function `ppScore :: Int -> Builder` which pretty prints the score. Feel free to use a representation you like. Below you have some examples
 - Modify the function `render` to have type `:: RenderState -> Builder`. Of course, the render function should plot the score and the board itself
+- clean errors the compiler gives. How do you print a `Builder` into the console?  (hint: check `IO` functions in the `Data.ByteString.Builder` [module](https://hackage.haskell.org/package/bytestring-0.10.6.0/docs/Data-ByteString-Builder.html))
 
 Here are some ways you can render the score:
 
