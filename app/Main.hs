@@ -25,20 +25,20 @@ import System.IO (BufferMode (NoBuffering), hSetBinaryMode, hSetBuffering, hSetE
 --   - Update the RenderState based on message delivered by GameState update
 --   - Render into the console
 gameloop :: BoardInfo -> GameState -> RenderState -> EventQueue -> IO ()
-gameloop binf app b queue = do
+gameloop binf gstate rstate queue = do
   threadDelay $ initialSpeed queue
   event <- readEvent queue
-  let (app', delta) =
+  let (gstate', delta) =
         case event of
-          Tick -> move binf app
+          Tick -> move binf gstate
           UserEvent m ->
-            if movement app == opositeMovement m
-              then move binf app
-              else move binf $ app{movement = m}
-  let board' = updateRenderState b delta
+            if movement gstate == opositeMovement m
+              then move binf gstate
+              else move binf $ gstate{movement = m}
+  let rstate' = updateRenderState rstate delta
   putStr "\ESC[2J" --This cleans the console screen
-  putStr $ render binf board'
-  gameloop binf app' board' queue
+  putStr $ render binf rstate'
+  gameloop binf gstate' rstate' queue
 
 -- | main.
 main :: IO ()
