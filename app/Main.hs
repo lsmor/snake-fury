@@ -35,7 +35,7 @@ gameloop binf app b queue = do
             if movement app == opositeMovement m
               then move binf app
               else move binf $ app{movement = m}
-  let board' = updateRenderState binf b delta
+  let board' = updateRenderState b delta
   putStr "\ESC[2J" --This cleans the console screen
   putStr $ render binf board'
   gameloop binf app' board' queue

@@ -41,8 +41,8 @@ buildInitialBoard bInfo initSnake initApple =
  where b = emptyGrid bInfo // [(initSnake, SnakeHead), (initApple, Apple)]
 
 -- | Given tye current render state, and a message -> update the render state
-updateRenderState :: BoardInfo -> RenderState -> RenderMessage -> RenderState
-updateRenderState binf (RenderState b gOver) message = 
+updateRenderState :: RenderState -> RenderMessage -> RenderState
+updateRenderState (RenderState b gOver) message = 
   case message of
     RenderBoard delta -> RenderState (b // delta) gOver
     GameOver          -> RenderState b  True
