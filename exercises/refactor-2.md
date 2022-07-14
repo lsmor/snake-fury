@@ -30,4 +30,12 @@ Look at the type of `move`, it is `BoardInfo -> GameState -> (GameState, [Render
 
 ### Step 2: Did you spot the pattern! That's a monad!
 
-Now, 
+We are verging to the part in which we use monads. The previous refactor has been difficult, but hopefully the function `move` now is clearer than before (If it isn't check the solution). On the way you've probably spotted a pattern: we are using always functions with almost the same structure: `some_function :: some_arguments -> GameState -> (Result, GameState)` (forget about `BoardInfo` and other arguments an let's focus on the last part of the signature.). These funtions always work the same way, they take some arguments, the game state and produce the updated game state and a result (a `Point`, a `DeltaBoard`, etc...). 
+
+Probably, In the previous step you've found yourself manually unpacking calls to this functions to use the updated state elsewhere. For example, I got something similar to this:
+
+```haskell
+let (delta, game_state2) = extendSnake newHead board_info game_state1
+    (delta, game_state3) = newApple board_info game_state2
+```
+
