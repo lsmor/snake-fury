@@ -89,6 +89,3 @@ move bi gstate@(GameState s applePos _ _) =
   where newHead           = nextHead bi gstate
         isColision        = newHead `inSnake` s
         isEatingApple     = newHead == applePos
-
--- >>> move (BoardInfo 10 10) (GameState (SnakeSeq {snakeHead = (9,5), snakeBody = S.fromList [(8,5)]}) (10,5) South (mkStdGen 5))
--- ([RenderBoard [((9,6),Apple),((10,5),SnakeHead),((9,5),Snake)],Score],GameState {snakeSeq = SnakeSeq {snakeHead = (10,5), snakeBody = fromList [(9,5),(8,5)]}, applePosition = (9,6), movement = South, randomGen = StdGen {unStdGen = SMGen 15450398106449630581 7134611160154358619}})
