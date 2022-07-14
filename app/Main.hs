@@ -39,12 +39,6 @@ gameloop binf gstate rstate queue = do
               else move binf $ gstate{movement = m}
   let rstate' = updateMessages rstate delta
   putStr "\ESC[2J" --This cleans the console screen
-  print "******"
-  print gstate
-  print "******"
-  print delta
-  print gstate'
-  print "******"
   B.hPutBuilder stdout $ render binf rstate'
   gameloop binf gstate' rstate' queue
 
