@@ -30,7 +30,7 @@ Look at the type of `move`, it is `BoardInfo -> GameState -> (GameState, [Render
 - Create function `extendSnake :: Point -> BoardInfo -> GameState -> (RenderState.DeltaBoard, GameState)` such that given a `point` representing the new position of the head, then it extends the current snake appending the new head. It returns the `GameState` with the field `snakeSeq` modified and `RenderState.DeltaBoard` with the changes we need to send to the `Board` in the `RenderState`. In other words, this function will be called when the snake is eating the apple. 
 - Create function `displaceSnake :: Point -> BoardInfo -> GameState -> (RenderState.DeltaBoard, GameState)` such that given a `point` representing the new position of the head, then it displace the current snake by appending the new head and _removing the tail_. It returns the `GameState` with the field `snakeSeq` modified and `RenderState.DeltaBoard` with the changes we need to send to the `Board` in the `RenderState`. In other words, this function will be called when the snake is not eating the apple. 
 
-### Step 2: Did you spot the pattern! That's a monad!
+## Step 2: Did you spot the pattern?! That's a monad!
 
 In this step we are going to define the `State` monad and a justification of it based on the previous pattern we've introduced. We are covering the foloowing topics
 
@@ -45,7 +45,7 @@ Probably, In the previous step you've found yourself manually unpacking calls to
 
 ```haskell
 let (delta, game_state2) = extendSnake newHead board_info game_state1
-    (delta, game_state3) = newApple board_info game_state2
+    (point, game_state3) = newApple board_info game_state2
 ```
 This manual handling of states is clumsy and error prone. Very easily you can forget to pass the updated state to the next function (if you don't belive me check the commit history, It has happened to me). The `State` monad is the solution for this. Before talking about the `State` monad you should notice:
 
@@ -54,6 +54,31 @@ This manual handling of states is clumsy and error prone. Very easily you can fo
 
 Now, let's go to the definition. The `State` monad is nothing else than a function from a state to a pair of a result and the updated state `type State a = SomeState -> (a, SomeState)` (the actual implementation is a little bit different). I'd recommend [monday morning haskell blog](https://mmhaskell.com/monads) as a reference for learning monads in depth. Here we are providing a shallow explanation. An _very_ important concept to understand when learning the `State` monad is that you are not handeling a piece of data, you are defining a function. Maybe, a better name would've been the `StateTransformation` monad. I know this sounds abstract right now, but keep this in mind: _the state monad defines a transformation on a piece of data that will be provided later_.
 
-Now, how do does the state monad help with the implementation?. Essentialy, it applies state transformation automaticaly
+Now, how do does the state monad help with the implementation?. Essentialy, it applies state transformation automaticaly. Following the previous example:
 
+```haskell
+# Without state monad you have this
+let (delta, game_state2) = extendSnake newHead board_info game_state1
+    (point, game_state3) = newApple board_info game_state2
+ in ...
 
+# With state monad this
+extendAndCreateNewApple newHead board_info = extendSnake newHead board_info >> newApple board_info >> ...
+```
+
+Wait what? did the state handling disappear?. Yes!, that's the magic of the state monad. You defined small functions modifying the state and the you change them together using operators like `>>`, `>>=` or `>=>`. Also, Haskell provides syntactic sugar for those operators in the form of the `do`-notation. You should read about it. 
+
+### Task 2.1: Refactor your code using the state monad.
+
+This will be a hard refactor. Keep that in mind, you'll need some time to get used to. Also remember that _the state monad defines a transformation on a piece of data that will be provided later_. This will be usefull when using functions like `get` which seem to magically produce a piece of data out of nowhere.
+
+- First define a type synonym `type GameStep a = State GameStep a`. You'll need to import `Control.Monad.State.Strict`.
+- Change functions so instead of having type `GameState -> (a, GameState)` they have `GameStep a`. Also, rename function `move` to `step` and create a function `move` which actually runs the `State` monad. You should refactor at least the follwing functions to have the given types:
+  - `makeRandomPoint :: BoardInfo -> GameStep Point`
+  - `newApple :: BoardInfo -> GameStep Point`
+  - `extendSnake ::  Point -> BoardInfo -> GameStep DeltaBoard`
+  - `displaceSnake ::  Point -> BoardInfo -> GameStep DeltaBoard`
+  - `step :: BoardInfo -> GameStep [Board.RenderMessage]`. This is the function `move` _renamed_
+  - `move :: BoardInfo -> GameState -> ([Board.RenderMessage], GameState)`. This is a _new_ function `move` which is defined in terms of `runState` and `step`
+
+Good luck!
