@@ -14,6 +14,8 @@ Of course, not always is clear who is responsable for what... that's software de
 
 ## Step 1: Apply changes locally
 
+In this step we are going to refactor the structure of our functions so all of them follow a pattern. Improving code quality.
+
 Look at the type of `move`, it is `BoardInfo -> GameState -> (GameState, [RenderMessage])`. Meaning that, It takes the `GameState` and produces a pair consisting in the new state and a result, which in this case is `[RenderMessage]`. We can apply the same trick to every function: take the `GameState` and produce a pair with the new state and a result.
 
 ### Task 1.1: modify makeRandomPoint and newApple
@@ -30,7 +32,14 @@ Look at the type of `move`, it is `BoardInfo -> GameState -> (GameState, [Render
 
 ### Step 2: Did you spot the pattern! That's a monad!
 
-We are verging to the part in which we use monads. The previous refactor has been difficult, but hopefully the function `move` now is clearer than before (If it isn't check the solution). On the way you've probably spotted a pattern: we are using always functions with almost the same structure: `some_function :: some_arguments -> GameState -> (Result, GameState)` (forget about `BoardInfo` and other arguments an let's focus on the last part of the signature.). These funtions always work the same way, they take some arguments, the game state and produce the updated game state and a result (a `Point`, a `DeltaBoard`, etc...). 
+In this step we are going to define the `State` monad and a justification of it based on the previous pattern we've introduced. We are covering the foloowing topics
+
+- There is a clear pattern introduced in Step 1
+- The previous refactor has some problems
+- What is the `State` monad?
+- How does it help to make better code? 
+
+We are verging to the part in which we use monads. The previous refactor has been difficult, but hopefully the function `move` now is clearer than before (If it isn't check the solution). On the way you've probably spotted a pattern: we are using always functions with almost the same structure: `some_function :: some_arguments -> GameState -> (Result, GameState)` (forget about `BoardInfo` and other arguments an let's focus on the last part of the signature.). These funtions always work the same way: they take some arguments, the game state and produce the updated game state and a result (a `Point`, a `DeltaBoard`, etc...). 
 
 Probably, In the previous step you've found yourself manually unpacking calls to this functions to use the updated state elsewhere. For example, I got something similar to this:
 
@@ -38,4 +47,13 @@ Probably, In the previous step you've found yourself manually unpacking calls to
 let (delta, game_state2) = extendSnake newHead board_info game_state1
     (delta, game_state3) = newApple board_info game_state2
 ```
+This manual handling of states is clumsy and error prone. Very easily you can forget to pass the updated state to the next function (if you don't belive me check the commit history, It has happened to me). The `State` monad is the solution for this. Before talking about the `State` monad you should notice:
+
+- The `State` monad is just an example (or an monad instance). It isn't THE definition of monad. You'll learn more monad examples in this challenge.
+- The `State` monad does not provide _more_ functionality!! It just a convinient interface for the problem we've seen before. This is a key concept: **Monads do not provide any extra functionality, they are just a convinient interface for many different patterns**.
+
+Now, let's go to the definition. The `State` monad is nothing else than a function from a state to a pair of a result and the updated state `type State a = SomeState -> (a, SomeState)` (the actual implementation is a little bit different). I'd recommend [monday morning haskell blog](https://mmhaskell.com/monads) as a reference for learning monads in depth. Here we are providing a shallow explanation. An _very_ important concept to understand when learning the `State` monad is that you are not handeling a piece of data, you are defining a function. Maybe, a better name would've been the `StateTransformation` monad. I know this sounds abstract right now, but keep this in mind: _the state monad defines a transformation on a piece of data that will be provided later_.
+
+Now, how do does the state monad help with the implementation?. Essentialy, it applies state transformation automaticaly
+
 
