@@ -10,7 +10,7 @@ import Data.Sequence ( Seq(..))
 import qualified Data.Sequence as S
 import System.Random ( uniformR, RandomGen(split), StdGen, Random (randomR), mkStdGen )
 import Data.Maybe (isJust)
-import Control.Monad.State.Strict (State, MonadState (get, put), modify, gets, runState)
+import Control.Monad.Trans.State.Strict (State, get, put, modify, gets, runState)
 
 data Movement = North | South | East | West deriving (Show, Eq)
 data SnakeSeq = SnakeSeq {snakeHead :: Point, snakeBody :: Seq Point} deriving (Show, Eq)
