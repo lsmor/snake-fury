@@ -11,6 +11,7 @@ import qualified Data.Sequence as S
 import System.Random ( uniformR, RandomGen(split), StdGen, Random (randomR), mkStdGen )
 import Data.Maybe (isJust)
 import Control.Monad.State.Strict (State, MonadState (get, put), modify, gets, runState)
+import Control.Monad.Reader (ReaderT (runReaderT), MonadReader (ask), runReader)
 
 data Movement = North | South | East | West deriving (Show, Eq)
 data SnakeSeq = SnakeSeq {snakeHead :: Point, snakeBody :: Seq Point} deriving (Show, Eq)
@@ -23,7 +24,7 @@ data GameState = GameState
   }
   deriving (Show, Eq)
 
-type GameStep a = State GameState a
+type GameStep a = ReaderT BoardInfo (State GameState) a
 
 -- | calculate the oposite movement. This is done because if snake is moving up
 -- We can not change direction to south.
@@ -34,8 +35,9 @@ opositeMovement East = West
 opositeMovement West = East
 
 -- | Purely creates a random point within the board limits
-makeRandomPoint :: BoardInfo -> GameStep Point
-makeRandomPoint (BoardInfo n i) = do
+makeRandomPoint :: GameStep Point
+makeRandomPoint = do
+  BoardInfo n i <- ask
   g <- gets randomGen
   let (g1, g2)  = split g
       (n', g1') = uniformR (1, n) g1
@@ -58,26 +60,29 @@ nextHead (BoardInfo h w) (GameState (SnakeSeq (x, y) _) _ mov _) =
     West  -> if y - 1 <= 0 then (x, w) else (x, y - 1)
 
 -- | Calculates a new random apple, avoiding creating the apple in the same place, or in the snake body
-newApple :: BoardInfo -> GameStep Point
-newApple bi = do 
-  (GameState snake_body old_apple move sg) <- get
-  new_apple <- makeRandomPoint bi
+newApple :: GameStep Point
+newApple = do 
+  bi <- ask
+  GameState snake_body old_apple move sg <- get
+  new_apple <- makeRandomPoint
   if new_apple == old_apple || new_apple `inSnake` snake_body
-     then newApple bi
+     then newApple
      else modify (\x -> x{applePosition = new_apple}) >> pure new_apple
 
 -- | move the snake's head forward without removing the tail. (This is the case of eating an apple)
-extendSnake ::  Point -> BoardInfo -> GameStep DeltaBoard
-extendSnake new_head binfo = do 
- SnakeSeq old_head snake_body <- gets snakeSeq
- let new_snake = SnakeSeq new_head (old_head :<| snake_body)
-     delta     = [(new_head, Board.SnakeHead), (old_head, Board.Snake)]
- modify $ \gstate -> gstate{snakeSeq = new_snake}
- pure delta
+extendSnake ::  Point -> GameStep DeltaBoard
+extendSnake new_head = do 
+  binfo <- ask
+  SnakeSeq old_head snake_body <- gets snakeSeq
+  let new_snake = SnakeSeq new_head (old_head :<| snake_body)
+      delta     = [(new_head, Board.SnakeHead), (old_head, Board.Snake)]
+  modify $ \gstate -> gstate{snakeSeq = new_snake}
+  pure delta
 
 -- | displace snake, that is: remove the tail and move the head forward (This is the case of eating an apple)
-displaceSnake :: Point -> BoardInfo -> GameStep DeltaBoard
-displaceSnake new_head binfo = do
+displaceSnake :: Point -> GameStep DeltaBoard
+displaceSnake new_head = do
+  binfo <- ask
   SnakeSeq old_head snake_body <- gets snakeSeq
   case snake_body of
     S.Empty -> let new_snake = SnakeSeq new_head S.empty
@@ -88,20 +93,21 @@ displaceSnake new_head binfo = do
                  in modify (\x -> x{snakeSeq = new_snake}) >> pure delta
 
 -- | Moves the snake based on the current direction.
-step :: BoardInfo -> GameStep [Board.RenderMessage]
-step bi = do
+step :: GameStep [Board.RenderMessage]
+step = do
+  bi <- ask
   gstate@(GameState s applePos _ _) <- get
   let  newHead           = nextHead bi gstate
        isEatingApple     = newHead == applePos
        isColision        = newHead `inSnake` s
 
   if | isColision -> pure [Board.GameOver]
-     | isEatingApple -> do delta <- extendSnake newHead bi
-                           newApplePos <- newApple bi
+     | isEatingApple -> do delta <- extendSnake newHead
+                           newApplePos <- newApple
                            let delta' = (newApplePos, Board.Apple):delta
                            pure [Board.RenderBoard delta', Board.Score]
-     | otherwise -> do delta <- displaceSnake newHead bi
+     | otherwise -> do delta <- displaceSnake newHead
                        pure [Board.RenderBoard delta]
 
 move :: BoardInfo -> GameState -> ([Board.RenderMessage], GameState)
-move bi = runState (step bi)
+move =  runState . runReaderT step
