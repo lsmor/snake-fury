@@ -72,6 +72,7 @@ Wait what? did the state handling disappear?. Yes!, that's the magic of the stat
 
 This will be a hard refactor. Keep that in mind, you'll need some time to get used to. Also remember that _the state monad defines a transformation on a piece of data that will be provided later_. This will be usefull when using functions like `get` which seem to magically produce a piece of data out of nowhere.
 
+- use the following imports: `import Control.Monad.Trans.State.Strict (State, get, put, modify, gets, runState)`
 - First define a type synonym `type GameStep a = State GameStep a`. You'll need to import `Control.Monad.State.Strict`.
 - Change functions so instead of having type `GameState -> (a, GameState)` they have `GameStep a`. Also, rename function `move` to `step` and create a function `move` which actually runs the `State` monad. You should refactor at least the follwing functions to have the given types:
   - `makeRandomPoint :: BoardInfo -> GameStep Point`
