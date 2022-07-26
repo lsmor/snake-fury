@@ -10,10 +10,13 @@ module RenderState where
 
 import Data.Array ( (//), listArray, Array, elems )
 import Control.Monad ( foldM_ )
-import Data.Foldable ( foldl' )
+import Data.Foldable ( foldl', traverse_ )
 import Debug.Trace(trace)
 import qualified Data.ByteString.Builder as B
 import Data.ByteString.Builder (Builder)
+import Control.Monad.Trans.Reader (ReaderT (runReaderT), asks, ask)
+import Control.Monad.Trans.State.Strict (State, put, get, runState, evalState)
+import Control.Monad.Trans (lift)
 
 type Point = (Int, Int)
 data CellType = Empty | Snake | SnakeHead | Apple deriving (Show, Eq)
@@ -24,6 +27,9 @@ type DeltaBoard = [(Point, CellType)]
 
 data RenderMessage = RenderBoard DeltaBoard | GameOver | Score deriving (Show, Eq)
 data RenderState   = RenderState {board :: Board, gameOver :: Bool, score :: Int}
+
+-- Type for the RenderStep
+type RenderStep a = ReaderT BoardInfo (State RenderState) a
 
 -- | Creates the empty grip from its info
 emptyGrid :: BoardInfo -> Board
@@ -42,16 +48,17 @@ buildInitialBoard bInfo initSnake initApple =
  where b = emptyGrid bInfo // [(initSnake, SnakeHead), (initApple, Apple)]
 
 -- | Given tye current render state, and a message -> update the render state
-updateRenderState :: RenderState -> RenderMessage -> RenderState
-updateRenderState (RenderState b gOver s) message =
+updateRenderState :: RenderMessage -> RenderStep ()
+updateRenderState message = do
+  (RenderState b gOver s) <- lift get
   case message of
-    RenderBoard delta -> RenderState (b // delta) gOver s
-    GameOver          -> RenderState b  True s
-    Score             -> RenderState b  gOver (s + 1)
+    RenderBoard delta -> lift . put $ RenderState (b // delta) gOver s
+    GameOver          -> lift . put $ RenderState b  True s
+    Score             -> lift . put $ RenderState b  gOver (s + 1)
 
 
-updateMessages :: RenderState -> [RenderMessage] -> RenderState
-updateMessages = foldl' updateRenderState
+updateMessages :: [RenderMessage] -> RenderStep ()
+updateMessages = traverse_ updateRenderState
 
 -- | Pretry printer Score
 ppScore :: Int -> Builder
@@ -68,14 +75,19 @@ ppCell SnakeHead = "$ "
 ppCell Apple     = "X "
 
 
-render :: BoardInfo -> RenderState -> Builder
-render binf@(BoardInfo h w) (RenderState b gOver s) =
+renderStep :: [RenderMessage] -> RenderStep Builder
+renderStep msgs = do 
+  binf@(BoardInfo h w)    <- ask
+  (RenderState b gOver s) <- lift get
+  updateMessages msgs
+  let boardToString =  foldl' fprint (mempty, 0)
+      fprint (!s, !i) cell =
+        if ((i + 1) `mod` w) == 0
+          then (s <> ppCell cell <> B.charUtf8 '\n', i + 1 )
+          else (s <> ppCell cell , i + 1)
   if gOver
-    then ppScore s <> fst (boardToString $ emptyGrid binf)
-    else ppScore s <> fst (boardToString b)
-  where
-    boardToString =  foldl' fprint (mempty, 0)
-    fprint (!s, !i) cell =
-      if ((i + 1) `mod` w) == 0
-        then (s <> ppCell cell <> B.charUtf8 '\n', i + 1 )
-        else (s <> ppCell cell , i + 1)
+    then pure $ ppScore s <> fst (boardToString $ emptyGrid binf)
+    else pure $ ppScore s <> fst (boardToString b)
+
+render :: [RenderMessage] -> BoardInfo -> RenderState ->  (Builder, RenderState)
+render msgs = runState . runReaderT (renderStep msgs)
