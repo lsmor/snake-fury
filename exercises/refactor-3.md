@@ -71,5 +71,5 @@ For the sake of practise, let's refactor `RenderState` module. Again, this feels
 - Change these functions types and modify their body accordingly:
   - `updateRenderState :: RenderMessage -> RenderStep ()`
   - `updateMessages :: [RenderMessage] -> RenderStep ()`
-- Rename function `render` to `renderStep` with type `renderStep :: [RenderMessage] -> RenderStep Builder`
-- Create function `render` with type `render :: [RenderMessage] -> BoardInfo -> RenderState ->  (Builder, RenderState)`. Given a list of messages, it runs the monad stack and produces the builder associated to the Initial 
+- Rename function `render` to `renderStep` with type `renderStep :: [RenderMessage] -> RenderStep Builder`. This function should update the `RenderState` w.r.t the received message, and produce a `Builder` of the updated state.
+- Create function `render` with type `render :: [RenderMessage] -> BoardInfo -> RenderState ->  (Builder, RenderState)`, which runs the monad stack producing the builder associated to the `RenderState` and the `RenderState` itself. 
