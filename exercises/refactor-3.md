@@ -15,7 +15,7 @@ As you can guess, `State` monad is just an example of monad. In Haskell we have 
 The problem with monads comes when you want to compose them. Meaning, what happend if I want to have do input/output and having a read-only environment, and a read-write state? I would need to use three different monad, but what type is that? AS we've seen in the previous refactor we have `State` for managing the read-write state. If I want to do all those effects, Does it exist a `IOReaderState` data type?. There existe something very similar: monad transformers.
 ### Task 1.1: Did you spot the subtle pattern?! That's the Reader Monad!!
 
-Did you notice that many functions in the `GameState` module uses the `BoardInfo` datatype? Of course!, the information about the size of the board is crucial all along the software. The `Reader` monad essentialy abstract this pattern. When you have a function from some environment to some result `function :: env -> a`, that can be express as `Reader env a`. This is usefull when you have multiple functions taking the same `env`. For example
+Did you notice that many functions in the `GameState` module uses the `BoardInfo` datatype? Of course!, the information about the size of the board is crucial all along the software. The `Reader` monad essentially abstract this pattern. When you have a function from some environment to some result `function :: env -> a`, that can be express as `Reader env a`. This is useful when you have multiple functions taking the same `env`. For example
 
 Without `Reader` monad
 ```haskell
@@ -42,7 +42,7 @@ j = do
   pure (a, b, c)
 ```
 
-You may think with haven't won anything. That's kind of true, but intention matters here. In the second example is very clear from the type signature that `env` is an important datatype in our software. It is used for configuration and as a read-only environment. Let's refactor `GameStep` to introduce the `ReaderT` transformer.
+You may think we haven't won anything. That's kind of true, but intention matters here. In the second example is very clear from the type signature that `env` is an important datatype in our software. It is used for configuration and as a read-only environment. Let's refactor `GameStep` to introduce the `ReaderT` transformer.
 
 - Introduce the following `imports`
   - `import Control.Monad.Trans.Reader (ReaderT (runReaderT), ask, runReader)`
@@ -73,3 +73,4 @@ For the sake of practise, let's refactor `RenderState` module. Again, this feels
   - `updateMessages :: [RenderMessage] -> RenderStep ()`
 - Rename function `render` to `renderStep` with type `renderStep :: [RenderMessage] -> RenderStep Builder`. This function should update the `RenderState` w.r.t the received message, and produce a `Builder` of the updated state.
 - Create function `render` with type `render :: [RenderMessage] -> BoardInfo -> RenderState ->  (Builder, RenderState)`, which runs the monad stack producing the builder associated to the `RenderState` and the `RenderState` itself. 
+- function `main` should be broken now. Make it work!. Do you think `main` looks better now? By "better" I mean: Does it looks like code is more declarative?
