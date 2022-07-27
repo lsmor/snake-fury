@@ -30,7 +30,7 @@ gameloop binf gstate rstate queue = do
   threadDelay new_speed
   event <- readEvent queue
   (delta, gstate') <- move event binf gstate
-  let (builder, rstate') = render delta binf rstate
+  (builder, rstate') <- render delta binf rstate
   putStr "\ESC[2J" --This cleans the console screen
   B.hPutBuilder stdout builder
   gameloop binf gstate' rstate' queue
