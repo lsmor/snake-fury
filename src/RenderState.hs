@@ -77,6 +77,7 @@ ppCell Apple     = "X "
 
 renderStep :: [RenderMessage] -> RenderStep Builder
 renderStep msgs = do 
+  updateMessages msgs
   binf@(BoardInfo h w)    <- ask
   (RenderState b gOver s) <- lift get
   let boardToString =  foldl' fprint (mempty, 0)
@@ -84,7 +85,6 @@ renderStep msgs = do
         if ((i + 1) `mod` w) == 0
           then (s <> ppCell cell <> B.charUtf8 '\n', i + 1 )
           else (s <> ppCell cell , i + 1)
-  updateMessages msgs
   if gOver  
     then pure $ ppScore s <> fst (boardToString $ emptyGrid binf)
     else pure $ ppScore s <> fst (boardToString b)
