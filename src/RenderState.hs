@@ -1,6 +1,7 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 
 {-|
@@ -14,9 +15,8 @@ import Data.Foldable ( foldl', traverse_ )
 import Debug.Trace(trace)
 import qualified Data.ByteString.Builder as B
 import Data.ByteString.Builder (Builder)
-import Control.Monad.Trans.Reader (ReaderT (runReaderT), asks, ask)
-import Control.Monad.Trans.State.Strict (State, put, get, runState, evalState)
-import Control.Monad.Trans (lift)
+import Control.Monad.Reader (ReaderT (runReaderT), asks, ask, MonadReader)
+import Control.Monad.State.Strict (State, put, get, runState, evalState, MonadState, StateT (runStateT))
 
 type Point = (Int, Int)
 data CellType = Empty | Snake | SnakeHead | Apple deriving (Show, Eq)
@@ -27,9 +27,6 @@ type DeltaBoard = [(Point, CellType)]
 
 data RenderMessage = RenderBoard DeltaBoard | GameOver | Score deriving (Show, Eq)
 data RenderState   = RenderState {board :: Board, gameOver :: Bool, score :: Int}
-
--- Type for the RenderStep
-type RenderStep a = ReaderT BoardInfo (State RenderState) a
 
 -- | Creates the empty grip from its info
 emptyGrid :: BoardInfo -> Board
@@ -48,16 +45,16 @@ buildInitialBoard bInfo initSnake initApple =
  where b = emptyGrid bInfo // [(initSnake, SnakeHead), (initApple, Apple)]
 
 -- | Given tye current render state, and a message -> update the render state
-updateRenderState :: RenderMessage -> RenderStep ()
+updateRenderState :: (MonadReader BoardInfo m, MonadState RenderState m) => RenderMessage -> m ()
 updateRenderState message = do
-  (RenderState b gOver s) <- lift get
+  (RenderState b gOver s) <- get
   case message of
-    RenderBoard delta -> lift . put $ RenderState (b // delta) gOver s
-    GameOver          -> lift . put $ RenderState b  True s
-    Score             -> lift . put $ RenderState b  gOver (s + 1)
+    RenderBoard delta -> put $ RenderState (b // delta) gOver s
+    GameOver          -> put $ RenderState b  True s
+    Score             -> put $ RenderState b  gOver (s + 1)
 
 
-updateMessages :: [RenderMessage] -> RenderStep ()
+updateMessages :: (MonadReader BoardInfo m, MonadState RenderState m) =>  [RenderMessage] -> m ()
 updateMessages = traverse_ updateRenderState
 
 -- | Pretry printer Score
@@ -75,11 +72,11 @@ ppCell SnakeHead = "$ "
 ppCell Apple     = "X "
 
 
-renderStep :: [RenderMessage] -> RenderStep Builder
+renderStep :: (MonadReader BoardInfo m, MonadState RenderState m) => [RenderMessage] -> m Builder
 renderStep msgs = do 
   updateMessages msgs
   binf@(BoardInfo h w)    <- ask
-  (RenderState b gOver s) <- lift get
+  (RenderState b gOver s) <- get
   let boardToString =  foldl' fprint (mempty, 0)
       fprint (!s, !i) cell =
         if ((i + 1) `mod` w) == 0
@@ -89,5 +86,5 @@ renderStep msgs = do
     then pure $ ppScore s <> fst (boardToString $ emptyGrid binf)
     else pure $ ppScore s <> fst (boardToString b)
 
-render :: [RenderMessage] -> BoardInfo -> RenderState ->  (Builder, RenderState)
-render msgs = runState . runReaderT (renderStep msgs)
+render :: Monad m => [RenderMessage] -> BoardInfo -> RenderState -> m (Builder, RenderState)
+render msgs = runStateT . runReaderT (renderStep msgs)
