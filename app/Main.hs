@@ -7,12 +7,11 @@ import Control.Concurrent (
   threadDelay,
  )
 import EventQueue (
-  Event (Tick, UserEvent),
   EventQueue,
   readEvent,
   writeUserInput, setSpeed
  )
-import GameState (GameState (movement), move, opositeMovement)
+import GameState (GameState, move)
 import Initialization (gameInitialization)
 import RenderState (BoardInfo, RenderState (score), render)
 import System.Environment (getArgs)
@@ -30,13 +29,7 @@ gameloop binf gstate rstate queue = do
   new_speed <- setSpeed (score rstate) queue
   threadDelay new_speed
   event <- readEvent queue
-  let (delta, gstate') =
-        case event of
-          Tick -> move binf gstate
-          UserEvent m ->
-            if movement gstate == opositeMovement m
-              then move binf gstate
-              else move binf $ gstate{movement = m}
+  let (delta, gstate') = move event binf gstate
   let (builder, rstate') = render delta binf rstate
   putStr "\ESC[2J" --This cleans the console screen
   B.hPutBuilder stdout builder

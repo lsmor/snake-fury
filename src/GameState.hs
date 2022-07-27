@@ -16,6 +16,12 @@ import Control.Monad.Trans.Class ( MonadTrans(lift) )
 
 data Movement = North | South | East | West deriving (Show, Eq)
 data SnakeSeq = SnakeSeq {snakeHead :: Point, snakeBody :: Seq Point} deriving (Show, Eq)
+
+-- | The are two kind of events, a `Tick`
+--   representing movement which is not force by the user input
+--   and `UserEvent` which is the opposite.
+data Event = Tick | UserEvent Movement
+
 data GameState = GameState
   { snakeSeq :: SnakeSeq
   , applePosition :: Point
@@ -110,5 +116,10 @@ step = do
      | otherwise -> do delta <- displaceSnake newHead
                        pure [Board.RenderBoard delta]
 
-move :: BoardInfo -> GameState -> ([Board.RenderMessage], GameState)
-move =  runState . runReaderT step
+-- | Given a event runs the step.
+move :: Event -> BoardInfo -> GameState -> ([Board.RenderMessage], GameState)
+move Tick bi gstate = runState (runReaderT step bi) gstate
+move (UserEvent m) bi gstate =
+  if movement gstate == opositeMovement m
+     then runState (runReaderT step bi) gstate
+     else runState (runReaderT step bi) gstate{movement = m}
