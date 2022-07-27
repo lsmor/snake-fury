@@ -35,7 +35,8 @@ data EventQueue = EventQueue
     initialSpeed :: Int
   }
 
--- | Given the current score, updates the global shared speed every 10 points by a factor of 10%. Returns the current state
+-- | Given the current score and the initial speed, calculates the new speed.
+--   The speed is increased by 10% every 10 points, up to 50 points.
 calculateSpeed :: Int -> Int -> Int
 calculateSpeed score initialSpeed =
   let level = min score 50 `quot` 10 -- maximun of 5 levels every 10 apples
@@ -53,7 +54,8 @@ setSpeed s (EventQueue _ m_current initial_speed) = do
     then pure current_speed -- If the new speed is equal to the current one, just return it
     else swapMVar m_current new_speed >> pure new_speed -- if not, swap the content of the reference with the new speed
 
-{- |---------------|
+{-
+ |---------------|
  |- User Inputs -|
  |---------------|
 -}
@@ -67,7 +69,7 @@ getKey = reverse <$> getKey' ""
     more <- hReady stdin
     (if more then getKey' else return) (char : chars)
 
-{- | This function translate key strokes to movements and push then into the queue.
+{- | This function translates key strokes to movements and push then into the queue.
  The player is free to push keys as fast a he/she can but the userqueue is bounded,
  meaning that if we push a movement to a filled queue it gets discarded.
  This is intented for the game play, If we press keys faster than the game speed
