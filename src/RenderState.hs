@@ -79,13 +79,13 @@ renderStep :: [RenderMessage] -> RenderStep Builder
 renderStep msgs = do 
   binf@(BoardInfo h w)    <- ask
   (RenderState b gOver s) <- lift get
-  updateMessages msgs
   let boardToString =  foldl' fprint (mempty, 0)
       fprint (!s, !i) cell =
         if ((i + 1) `mod` w) == 0
           then (s <> ppCell cell <> B.charUtf8 '\n', i + 1 )
           else (s <> ppCell cell , i + 1)
-  if gOver
+  updateMessages msgs
+  if gOver  
     then pure $ ppScore s <> fst (boardToString $ emptyGrid binf)
     else pure $ ppScore s <> fst (boardToString b)
 
