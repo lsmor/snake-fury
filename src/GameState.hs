@@ -115,9 +115,10 @@ step = do
                        pure [Board.RenderBoard delta]
 
 -- | Given a event runs the step.
-move :: Monad m => Event -> BoardInfo -> GameState -> m ([Board.RenderMessage], GameState)
-move Tick bi gstate = runStateT (runReaderT step bi) gstate
-move (UserEvent m) bi gstate =
-  if movement gstate == opositeMovement m
-     then runStateT (runReaderT step bi) gstate
-     else runStateT (runReaderT step bi) gstate{movement = m}
+move :: (MonadReader BoardInfo m, MonadState GameState m) => Event -> m [Board.RenderMessage]
+move Tick = step
+move (UserEvent input_movement) = do
+  current_movement <- gets movement
+  if current_movement == opositeMovement input_movement
+     then step
+     else modify (\gstate -> gstate{movement = input_movement}) >> step

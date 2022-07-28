@@ -17,6 +17,8 @@ import qualified Data.ByteString.Builder as B
 import Data.ByteString.Builder (Builder)
 import Control.Monad.Reader (ReaderT (runReaderT), asks, ask, MonadReader)
 import Control.Monad.State.Strict (State, put, get, runState, evalState, MonadState, StateT (runStateT))
+import System.IO (stdout)
+import Control.Monad.IO.Class (MonadIO (liftIO))
 
 type Point = (Int, Int)
 data CellType = Empty | Snake | SnakeHead | Apple deriving (Show, Eq)
@@ -86,5 +88,8 @@ renderStep msgs = do
     then pure $ ppScore s <> fst (boardToString $ emptyGrid binf)
     else pure $ ppScore s <> fst (boardToString b)
 
-render :: Monad m => [RenderMessage] -> BoardInfo -> RenderState -> m (Builder, RenderState)
-render msgs = runStateT . runReaderT (renderStep msgs)
+render :: (MonadReader BoardInfo m, MonadState RenderState m, MonadIO m) => [RenderMessage] -> m ()
+render msgs = do
+  builder <- renderStep msgs
+  liftIO $ putStr "\ESC[2J" --This cleans the console screen
+  liftIO $ B.hPutBuilder stdout builder

@@ -24,6 +24,7 @@ library
       RenderState
       GameState
       Initialization
+      App
   other-modules:
       Paths_snake_fury
   hs-source-dirs:
