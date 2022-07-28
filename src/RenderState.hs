@@ -2,6 +2,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use <$>" #-}
 
 
 {-|
@@ -73,20 +75,26 @@ ppCell Snake     = "0 "
 ppCell SnakeHead = "$ "
 ppCell Apple     = "X "
 
+-- | purely builds the board given necessary info
+buildBoard :: BoardInfo -> RenderState -> Builder
+buildBoard binf@(BoardInfo h w) (RenderState b gOver s) =
+  if gOver
+    then ppScore s <> fst (boardToString $ emptyGrid binf)
+    else ppScore s <> fst (boardToString b)
+  where
+    boardToString =  foldl' fprint (mempty, 0)
+    fprint (!s, !i) cell =
+      if ((i + 1) `mod` w) == 0
+        then (s <> ppCell cell <> B.charUtf8 '\n', i + 1 )
+        else (s <> ppCell cell , i + 1)
 
+-- | runs one step in the render state: Process the messages and build the board with the resulting state
 renderStep :: (MonadReader BoardInfo m, MonadState RenderState m) => [RenderMessage] -> m Builder
 renderStep msgs = do 
   updateMessages msgs
-  binf@(BoardInfo h w)    <- ask
-  (RenderState b gOver s) <- get
-  let boardToString =  foldl' fprint (mempty, 0)
-      fprint (!s, !i) cell =
-        if ((i + 1) `mod` w) == 0
-          then (s <> ppCell cell <> B.charUtf8 '\n', i + 1 )
-          else (s <> ppCell cell , i + 1)
-  if gOver  
-    then pure $ ppScore s <> fst (boardToString $ emptyGrid binf)
-    else pure $ ppScore s <> fst (boardToString b)
+  binf <- ask
+  rstate <- get
+  pure $ buildBoard binf rstate
 
 render :: (MonadReader BoardInfo m, MonadState RenderState m, MonadIO m) => [RenderMessage] -> m ()
 render msgs = do
