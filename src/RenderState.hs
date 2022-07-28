@@ -18,7 +18,7 @@ import Debug.Trace(trace)
 import qualified Data.ByteString.Builder as B
 import Data.ByteString.Builder (Builder)
 import Control.Monad.Reader (ReaderT (runReaderT), asks, ask, MonadReader)
-import Control.Monad.State.Strict (State, put, get, runState, evalState, MonadState, StateT (runStateT))
+import Control.Monad.State.Strict (State, put, get, runState, evalState, MonadState, StateT (runStateT), gets, modify)
 import System.IO (stdout)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 
@@ -31,6 +31,10 @@ type DeltaBoard = [(Point, CellType)]
 
 data RenderMessage = RenderBoard DeltaBoard | GameOver | Score deriving (Show, Eq)
 data RenderState   = RenderState {board :: Board, gameOver :: Bool, score :: Int}
+
+class HasRenderState state where
+  getRenderState :: state -> RenderState
+  setRenderState :: state -> RenderState -> state
 
 -- | Creates the empty grip from its info
 emptyGrid :: BoardInfo -> Board
@@ -49,16 +53,16 @@ buildInitialBoard bInfo initSnake initApple =
  where b = emptyGrid bInfo // [(initSnake, SnakeHead), (initApple, Apple)]
 
 -- | Given tye current render state, and a message -> update the render state
-updateRenderState :: (MonadReader BoardInfo m, MonadState RenderState m) => RenderMessage -> m ()
+updateRenderState :: (MonadReader BoardInfo m, MonadState state m, HasRenderState state)  => RenderMessage -> m ()
 updateRenderState message = do
-  (RenderState b gOver s) <- get
+  (RenderState b gOver s) <- gets getRenderState
   case message of
-    RenderBoard delta -> put $ RenderState (b // delta) gOver s
-    GameOver          -> put $ RenderState b  True s
-    Score             -> put $ RenderState b  gOver (s + 1)
+    RenderBoard delta -> modify (`setRenderState` RenderState (b // delta) gOver s)
+    GameOver          -> modify (`setRenderState` RenderState b  True s )
+    Score             -> modify (`setRenderState` RenderState b  gOver (s + 1) )
 
 
-updateMessages :: (MonadReader BoardInfo m, MonadState RenderState m) =>  [RenderMessage] -> m ()
+updateMessages :: (MonadReader BoardInfo m, MonadState state m, HasRenderState state) =>  [RenderMessage] -> m ()
 updateMessages = traverse_ updateRenderState
 
 -- | Pretry printer Score
@@ -89,14 +93,14 @@ buildBoard binf@(BoardInfo h w) (RenderState b gOver s) =
         else (s <> ppCell cell , i + 1)
 
 -- | runs one step in the render state: Process the messages and build the board with the resulting state
-renderStep :: (MonadReader BoardInfo m, MonadState RenderState m) => [RenderMessage] -> m Builder
+renderStep :: (MonadReader BoardInfo m, MonadState state m, HasRenderState state) => [RenderMessage] -> m Builder
 renderStep msgs = do 
   updateMessages msgs
   binf <- ask
-  rstate <- get
+  rstate <- gets getRenderState
   pure $ buildBoard binf rstate
 
-render :: (MonadReader BoardInfo m, MonadState RenderState m, MonadIO m) => [RenderMessage] -> m ()
+render :: (MonadReader BoardInfo m, MonadState state m, HasRenderState state, MonadIO m) => [RenderMessage] -> m ()
 render msgs = do
   builder <- renderStep msgs
   liftIO $ putStr "\ESC[2J" --This cleans the console screen

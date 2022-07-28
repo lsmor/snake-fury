@@ -4,36 +4,14 @@ module Main where
 
 import Control.Concurrent (
   forkIO,
-  threadDelay,
  )
 import EventQueue (
-  EventQueue,
-  readEvent,
-  writeUserInput, setSpeed
+  writeUserInput
  )
-import GameState (GameState, move)
 import Initialization (gameInitialization)
-import RenderState (BoardInfo, RenderState (score), render)
 import System.Environment (getArgs)
 import System.IO (BufferMode (NoBuffering), hSetBinaryMode, hSetBuffering, hSetEcho, stdin, stdout)
-import qualified Data.ByteString.Builder as B
-
--- The game loop is easy:
---   - wait some time
---   - read an Event from the queue
---   - Update the GameState
---   - Update the RenderState based on message delivered by GameState update
---   - Render into the console
-gameloop :: BoardInfo -> GameState -> RenderState -> EventQueue -> IO ()
-gameloop binf gstate rstate queue = do
-  new_speed <- setSpeed (score rstate) queue
-  threadDelay new_speed
-  event <- readEvent queue
-  (delta, gstate') <- move event binf gstate
-  (builder, rstate') <- render delta binf rstate
-  putStr "\ESC[2J" --This cleans the console screen
-  B.hPutBuilder stdout builder
-  gameloop binf gstate' rstate' queue
+import App (AppState (AppState), run)
 
 -- | main.
 main :: IO ()
@@ -52,5 +30,5 @@ main = do
 
   -- Game Loop. We run two different threads, one for the gameloop (main) and one for user inputs.
   _ <- forkIO $ writeUserInput eventQueue
-  let initialState = gameState
-  gameloop binf initialState renderState eventQueue
+  let initialState = AppState gameState renderState
+  run binf initialState eventQueue
