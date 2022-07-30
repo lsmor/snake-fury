@@ -2,6 +2,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DerivingVia #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use <$>" #-}
 
@@ -29,6 +31,9 @@ type DeltaBoard = [(Point, CellType)]
 
 data RenderMessage = RenderBoard DeltaBoard | GameOver | Score deriving (Show, Eq)
 data RenderState   = RenderState {board :: Board, gameOver :: Bool, score :: Int}
+
+newtype RenderStep m a = RenderStep {runRenderStep :: ReaderT BoardInfo (StateT RenderState m) a}
+  deriving newtype (Functor, Applicative, Monad, MonadState RenderState, MonadReader BoardInfo) 
 
 -- | Creates the empty grip from its info
 emptyGrid :: BoardInfo -> Board
@@ -95,4 +100,4 @@ renderStep msgs = do
   pure $ buildBoard binf rstate
 
 render :: Monad m => [RenderMessage] -> BoardInfo -> RenderState -> m (Builder, RenderState)
-render msgs = runStateT . runReaderT (renderStep msgs)
+render msgs = runStateT . runReaderT (runRenderStep . renderStep $ msgs)

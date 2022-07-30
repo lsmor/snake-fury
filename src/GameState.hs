@@ -1,6 +1,7 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DerivingVia #-}
 {-|
 This module defines the logic of the game and the communication with the `Board.RenderState`
 -}
@@ -31,6 +32,9 @@ data GameState = GameState
   , randomGen :: StdGen
   }
   deriving (Show, Eq)
+
+newtype GameStep m a = GameStep {runGameStep :: ReaderT BoardInfo (StateT GameState m) a}
+  deriving newtype (Functor, Applicative, Monad, MonadState GameState, MonadReader BoardInfo)
 
 -- | calculate the oposite movement. This is done because if snake is moving up
 -- We can not change direction to south.
@@ -117,8 +121,8 @@ step = do
 
 -- | Given a event runs the step.
 move :: Monad m => Event -> BoardInfo -> GameState -> m ([Board.RenderMessage], GameState)
-move Tick bi gstate = step `runReaderT` bi `runStateT` gstate
+move Tick bi gstate = runGameStep step `runReaderT` bi `runStateT` gstate
 move (UserEvent m) bi gstate =
   if movement gstate == opositeMovement m
-     then step `runReaderT` bi `runStateT` gstate
-     else step `runReaderT` bi `runStateT` gstate{movement = m}
+     then runGameStep step `runReaderT` bi `runStateT` gstate
+     else runGameStep step `runReaderT` bi `runStateT` gstate{movement = m}
