@@ -33,4 +33,4 @@ gameloop queue = forever $ do
   gameStep queue
 
 run :: BoardInfo -> AppState -> EventQueue -> IO ()
-run binf app queue = runReaderT (evalStateT (gameloop queue) app) binf
+run binf app queue = gameloop queue `evalStateT` app `runReaderT` binf
