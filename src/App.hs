@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module App where
 import GameState (GameState, move, HasGameState (getGameState, setGameState))
@@ -12,6 +13,8 @@ import Control.Monad (forever)
 
 
 data AppState = AppState GameState RenderState
+newtype App m a = App {runApp :: ReaderT BoardInfo (StateT AppState m) a}
+  deriving (Functor , Applicative, Monad, MonadState AppState, MonadReader BoardInfo, MonadIO)
 
 instance HasGameState AppState where
   getGameState (AppState g _ )   = g
@@ -33,4 +36,4 @@ gameloop queue = forever $ do
   gameStep queue
 
 run :: BoardInfo -> AppState -> EventQueue -> IO ()
-run binf app queue = gameloop queue `evalStateT` app `runReaderT` binf
+run binf app queue = runApp (gameloop queue) `runReaderT` binf `evalStateT` app
