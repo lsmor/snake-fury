@@ -2,6 +2,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DerivingVia #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use <$>" #-}
 
@@ -35,6 +37,7 @@ data RenderState   = RenderState {board :: Board, gameOver :: Bool, score :: Int
 class HasRenderState state where
   getRenderState :: state -> RenderState
   setRenderState :: state -> RenderState -> state
+
 
 -- | Creates the empty grip from its info
 emptyGrid :: BoardInfo -> Board

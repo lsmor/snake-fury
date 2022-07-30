@@ -1,6 +1,8 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DerivingVia #-}
 {-|
 This module defines the logic of the game and the communication with the `Board.RenderState`
 -}
@@ -12,8 +14,8 @@ import Data.Sequence ( Seq(..))
 import qualified Data.Sequence as S
 import System.Random ( uniformR, RandomGen(split), StdGen, Random (randomR), mkStdGen )
 import Data.Maybe (isJust)
-import Control.Monad.Reader (ReaderT (runReaderT), ask, runReader, MonadReader)
-import Control.Monad.State.Strict (StateT, get, put, modify, gets, runStateT, MonadState)
+import Control.Monad.Reader (ReaderT (runReaderT), ask, runReader, MonadReader, Reader)
+import Control.Monad.State.Strict (StateT, get, put, modify, gets, runStateT, MonadState, State, runState)
 
 data Movement = North | South | East | West deriving (Show, Eq)
 data SnakeSeq = SnakeSeq {snakeHead :: Point, snakeBody :: Seq Point} deriving (Show, Eq)
@@ -35,6 +37,7 @@ data GameState = GameState
 class HasGameState state where
   getGameState :: state -> GameState
   setGameState :: state -> GameState -> state
+
 
 -- | calculate the oposite movement. This is done because if snake is moving up
 -- We can not change direction to south.
