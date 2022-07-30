@@ -191,6 +191,7 @@ main = do
 
 ```haskell 
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module App where
 import GameState (GameState, move, HasGameState (getGameState, setGameState))
@@ -204,6 +205,10 @@ import Control.Monad (forever)
 
 -- This is the new state, which glue together Game and Render states.
 data AppState = AppState GameState RenderState
+
+-- Our application is a readerT with and AppState and IO capabilities.
+newtype App m a = App {runApp :: ReaderT BoardInfo (StateT AppState m) a}
+  deriving (Functor , Applicative, Monad, MonadState AppState, MonadReader BoardInfo, MonadIO)
 
 -- We need to make AppState and instance of HasGameState so we can use it with functions from `GameState.hs`
 instance HasGameState AppState where
