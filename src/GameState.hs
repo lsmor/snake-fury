@@ -1,5 +1,6 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-|
 This module defines the logic of the game and the communication with the `Board.RenderState`
 -}
@@ -11,8 +12,8 @@ import Data.Sequence ( Seq(..))
 import qualified Data.Sequence as S
 import System.Random ( uniformR, RandomGen(split), StdGen, Random (randomR), mkStdGen )
 import Data.Maybe (isJust)
-import Control.Monad.Reader (ReaderT (runReaderT), ask, runReader, MonadReader)
-import Control.Monad.State.Strict (StateT, get, put, modify, gets, runStateT, MonadState)
+import Control.Monad.Reader (ReaderT (runReaderT), ask, runReader, MonadReader, Reader)
+import Control.Monad.State.Strict (StateT, get, put, modify, gets, runStateT, MonadState, State, runState)
 
 data Movement = North | South | East | West deriving (Show, Eq)
 data SnakeSeq = SnakeSeq {snakeHead :: Point, snakeBody :: Seq Point} deriving (Show, Eq)
@@ -116,8 +117,8 @@ step = do
 
 -- | Given a event runs the step.
 move :: Monad m => Event -> BoardInfo -> GameState -> m ([Board.RenderMessage], GameState)
-move Tick bi gstate = runStateT (runReaderT step bi) gstate
+move Tick bi gstate = step `runReaderT` bi `runStateT` gstate
 move (UserEvent m) bi gstate =
   if movement gstate == opositeMovement m
-     then runStateT (runReaderT step bi) gstate
-     else runStateT (runReaderT step bi) gstate{movement = m}
+     then step `runReaderT` bi `runStateT` gstate
+     else step `runReaderT` bi `runStateT` gstate{movement = m}
