@@ -22,6 +22,11 @@ import System.IO (hReady, stdin)
 -- | the `UserInputQueue` is an asynchronous bounded channel which contains snake movements. This channel is feeded by key strokes
 type UserInputQueue = BoundedChan Snake.Movement
 
+-- This is the type class of environments with an EventQueue
+class HasEventQueue env where
+  getEventQueue :: env -> EventQueue
+
+
 -- | The `EventQueue` has a `UserInputQueue` and the global speed of consumption (as a mutable reference) and the initial speed of the game.
 data EventQueue = EventQueue
   { -- | An asynchronous queue of movements the snake needs to do.
