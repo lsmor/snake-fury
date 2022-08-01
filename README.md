@@ -4,6 +4,7 @@
   - [Introduction](#introduction)
     - [note about not using monads](#note-about-not-using-monads)
   - [Start coding. Building a MVP](#start-coding-building-a-mvp)
+    - [On using vscode](#on-using-vscode)
   - [Refactors](#refactors)
   - [Solution branches](#solution-branches)
   - [Building and Running](#building-and-running)
@@ -62,6 +63,12 @@ Each file correspond to each component in the system (and some utilities to keep
 Once you fill `GameState.hs` and `RenderState.hs` you should be able to run the snake game in a terminal with the following command `cabal run snake-fury -- height width fps`. Use arrow keys to move the snake.
 
 ![example of running](./assets/snake-mpv.gif)
+
+### On using vscode
+
+If you have configured well you vscode you should be able to run in-comment examples. If you can't something has gone wrong. Be sure you've followed the [instructions](#set-up-a-development-environment). Below there is an example of what you should see.
+
+
 
 ## Refactors
 
