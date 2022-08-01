@@ -59,7 +59,7 @@ src
 
 Open files `src/GameState.hs` and `src/RenderState.hs`. You'll find the exercises statements as comments.
 
-Each file correspond to each component in the system (and some utilities to keep code simpler). Be sure you read the about the [arquitecture](#markdown-header-arquitecture) to understand why the code is splitted this way. Notice that you'll need to implement as many auxiliar functions as you need to make it work. If you feel stuck you can check the [solution](#markdown-header-solution) I've implemented. It is totally fine if you implement a different one.
+Each file correspond to each component in the system (and some utilities to keep code simpler). Be sure you read the about the [arquitecture](#markdown-header-arquitecture) to understand why the code is splitted this way. Notice that you'll need to implement as many auxiliar functions as you need to make it work. If you feel stuck you can check the [solution](#solution-branches) I've implemented. It is totally fine if you implement a different one.
 
 Once you fill `GameState.hs` and `RenderState.hs` you should be able to run the snake game in a terminal with the following command `cabal run snake-fury -- height width fps`. Use arrow keys to move the snake.
 
@@ -67,7 +67,7 @@ Once you fill `GameState.hs` and `RenderState.hs` you should be able to run the 
 
 ### On using vscode
 
-If you have configured well you vscode you should be able to run in-comment examples. If you can't something has gone wrong. Be sure you've followed the [instructions](#set-up-a-development-environment). Below there is an example of what you should see.
+If you have configured well your vscode you should be able to run in-comment examples. If you can't, something has gone wrong. Be sure you've followed the [instructions](#set-up-a-development-environment). Below there is an example of what you should see.
 
 ![example of in-comment test](./assets/example-inline-test.gif)
 
@@ -137,7 +137,7 @@ The general arquitecture of the software is the following:
   - The sencondary thread is continuously reading from users keyboard and pushing the key strokes into an asynchronous EventQueue
   - The main thread reads at steady time from the EventQueue, and based on what the user has pressed, it runs the game logic and prints the board in the console
 
-Notice that two threads are necessary, since use can press keys faster than the game update. For example let say we run a frame each second and a half (normal speed in the snake game.), then a user is likely to press keys faster than that. If the key stroke are catch as the same speed the game runs, then many stroke will be lost.
+Notice that two threads are necessary, since user could press keys faster than the game updates (fps). For example let say we run a frame each second and a half (normal speed in the snake game.), then a user is likely to press keys faster than that. If the key strokes are catch only when a frame is about to be render, then many stroke will be lost.
 
 The following diagram helps to visualize
 
@@ -145,7 +145,7 @@ The following diagram helps to visualize
 
 ## Set up a development environment
 
-I strongly recommend to use [ghcup](https://www.haskell.org/ghcup/) to manage your Haskell toolchain. And vscode as your editor. A loca development enrivonment can be setted up in three steps. [Check this guide](https://gist.github.com/lsmor/bb632565cd96be9da589b6e91f80f9ba)
+I strongly recommend to use [ghcup](https://www.haskell.org/ghcup/) to manage your Haskell toolchain. And vscode as your editor. A local development environment can be setted up in three steps. [Check this guide](https://gist.github.com/lsmor/bb632565cd96be9da589b6e91f80f9ba)
 
 ## Contributions
 
