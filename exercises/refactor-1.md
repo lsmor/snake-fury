@@ -27,7 +27,7 @@ you will update the code to make an score which is updated each time the snake e
 - Because `score` is used in `RenderState` we need to update it via `RenderMessage`. Add a new case in the `RenderMessage` ADT to represent such message. Does the compiler complain about incomplete patterns? Which function/s is broken after this change?
 - If you think carefully, we need to change `GameState.move` function, because now there are cases in which we need to send more than one message. Update the code to send a list of messages after each move.
 - Now, something is broken... we used to proccess a single message in `RenderState.updateRenderState`. Create a new function `updateMessages :: RenderState -> [RenderMessage] -> RenderState` which updates the state given many messages. hint: it can be a one-line function.
-- clean errors the compiler gives if any.
+- clean compiler errors if any.
 
 ## Step 2: Increase the speed every 10 scores up to 5 speed-ups
 
