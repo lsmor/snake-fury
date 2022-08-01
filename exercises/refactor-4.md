@@ -1,4 +1,14 @@
-# Refactor 4: MTL classes.
+# Refactor 4: MTL classes
+
+- [Refactor 4: MTL classes](#refactor-4-mtl-classes)
+  - [Step 1: mtl constraints](#step-1-mtl-constraints)
+    - [Task 1.0: Small change on Event](#task-10-small-change-on-event)
+    - [Task 1.1: Create a newtype with the capabilities you want](#task-11-create-a-newtype-with-the-capabilities-you-want)
+    - [Task 1.2: Abstract your functions](#task-12-abstract-your-functions)
+  - [Step 2: Glue Together RenderState and GameState](#step-2-glue-together-renderstate-and-gamestate)
+    - [Task 2.1: Define `Has` type classes](#task-21-define-has-type-classes)
+    - [Task 2.2: Modify function `move` and `render`](#task-22-modify-function-move-and-render)
+    - [Task 2.3: Create a new module and move `gameloop` there](#task-23-create-a-new-module-and-move-gameloop-there)
 
 In this refactor you'll learn about `mtl`-style and how it improves code. First, you need to do one test: In module `GameState.hs` change `GameStep` type for the one below as see what happens whe you build
 
@@ -31,13 +41,14 @@ This refactor is divided in two Steps:
   - Taks 2.2: Change the type of `render` and `move`
   - Task 2.3: Write a `App` with all you need. Redifine the `gameloop`
 
-## Step 1: mtl constraints.
+## Step 1: mtl constraints
 
 This step you will move from `Control.Monad.Trans.XXXX` to `Control.Monad.XXXX`. This modules belongs to different packages `transformers` and `mtl`. The later depends on the former. The module hierarchy looks like the follow:
+
 - Modules `Control.Monad.Trans.XXXX` have only concrete implementations of monad transformers. For example: module `Control.Monad.Trans.Reader` contains `ReaderT` type
 - Modules `Control.Monad.XXXX` have concrete _and_ abstract implementations. For example: module `Control.Monad.Reader` contains type `ReaderT` and type class `MonadReader`
 
-In general, you want to use modules from `mtl` package, hence `Control.Monad.XXXX` because is more abstract. And abstraction is _almost always_ a good idea. 
+In general, you want to use modules from `mtl` package, hence `Control.Monad.XXXX` because is more abstract. And abstraction is _almost always_ a good idea.
 
 ### Task 1.0: Small change on Event
 
@@ -59,6 +70,7 @@ After this change, does the `gameloop` function looks more similar to the diagra
 This task will expose you to a common pattern which is to define you monad stacks within a newtype wrapper which implements only the features you'd like.
 
 (hint: This exercise looks difficult, but is all about wrapping and unwrapping the newtype)
+
 - Modify `GameStep` from `ReaderT BoardInfo (State GameState) a` to `newtype GameStep m a = GameStep {runGameStep :: ReaderT BoardInfo (StateT GameState m) a}`
 - Implement `Functor` instance for the newtype
 - Implement `Applicative` instance for the newtype
@@ -88,14 +100,13 @@ Essentialy, you are telling the compiler that your `GameStep` type has this capa
 - Change function `render` to have type `Monad m => [RenderMessage] -> BoardInfo -> RenderState -> m (Builder, RenderState)`
 - fix compiler errors.
 
-
-## Step 2: Glue Together RenderState and GameState.
+## Step 2: Glue Together RenderState and GameState
 
 The current state of things if satisfactory, as we can change the monad stack and our code will still compile and run with minimum changes. If you don't believe me, try to swap `Reader` and `State` in monads  `GameStep` or `RenderStep`. Now you should not have the problem of all your functions not compiling.
 
 Nevertheless, we have a little problem still. Take a look to `Main.gameloop` function. This function is very error prone, because we need to take care of manually passing updates state to the next execution of the loop. Also, it is on charge of pulling event, updting state and putting the render into the console. Just to reminder. This is how our arquitecture look like:
 
-![](../../snake-fury/assets/snake_arquitecture.png)
+![snake-fury arquitecture](../../snake-fury/assets/snake_arquitecture.png)
 
 It makes little sense that the main loop explicitly has to care about the updated states. This should be done implicitly when calling `move` and `render` during the `gameloop`. In other words, we would like the implementation of `gameloop` to look like:
 
@@ -110,7 +121,6 @@ gameloop = forever $ do
 ```
 
 This is impossible to define in `Haskell` with `mtl`-style code. Think what would `get` return? the `GameState` or the `RenderState`?. By the way `mtl` classes are implemented, this code can't be implemented. What we can do is to defined a common state called `AppState` which has both the `GameState` and the `RenderState`. But, now we would run into a problem. Our functions are defined for `MonadState GameState` and `MonadState RenderState`.
-
 
 ### Task 2.1: Define `Has` type classes
 
@@ -135,20 +145,21 @@ class HasRenderState state where
 - Modify all functions with the constraint `MonadState GameState m` to have this constraint `MonadState s m, HasGameState s`
 - Modify all functions with the constraint `MonadState RenderState m` to have this constraint `MonadState s m, HasRenderState s`
 
-Do you understand what are we doing? Instead of saying _function f works on a RenderState_, we are saying _function f works on some state which has access to a RenderState_. 
+Do you understand what are we doing? Instead of saying _function f works on a RenderState_, we are saying _function f works on some state which has access to a RenderState_.
 
 ### Task 2.2: Modify function `move` and `render`
 
 - modify function `move` to have type `move :: (MonadReader BoardInfo m, MonadState state m, HasGameState state) => Event -> m [Board.RenderMessage]`
-  - notice that `move` should not call `runReaderT` or `runState` any more. 
-- modify function `render` to have type `render :: (MonadReader BoardInfo m, MonadState state m, HasRenderState state, MonadIO m) => [RenderMessage] -> m ()`. 
-  - Notice that `render` should not call `runReaderT` or `runState` any more. 
-  - `render` has a new functionality as you can see now it has a `MonadIO` constraint. That means, that we expect `render` to do something in the `IO` monad. 
+  - notice that `move` should not call `runReaderT` or `runState` any more.
+- modify function `render` to have type `render :: (MonadReader BoardInfo m, MonadState state m, HasRenderState state, MonadIO m) => [RenderMessage] -> m ()`.
+  - Notice that `render` should not call `runReaderT` or `runState` any more.
+  - `render` has a new functionality as you can see now it has a `MonadIO` constraint. That means, that we expect `render` to do something in the `IO` monad.
   - `render` should call `putStr` and `B.hPutBuilder` the same way `Main.gameloop` now does.
 
-### Task 2.3: Create a new module and move `gameloop` there.
+### Task 2.3: Create a new module and move `gameloop` there
 
 - Change `Main.hs` by removing `gameloop`. This should be the new `Main.hs`. Copy paste it.
+
 ```haskell
 {-# LANGUAGE NumericUnderscores #-}
 
@@ -184,12 +195,11 @@ main = do
   _ <- forkIO $ writeUserInput eventQueue
   let initialState = AppState gameState renderState
   run binf initialState eventQueue
-``` 
-
+```
 
 - Create a new module call `App.hs` and copy paste the template below
 
-```haskell 
+```haskell
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
@@ -238,7 +248,3 @@ gameloop queue = forever $ do
 run :: BoardInfo -> AppState -> EventQueue -> IO ()
 run binf app queue = gameloop queue `evalStateT` app `runReaderT` binf
 ```
-
-
-
- 
