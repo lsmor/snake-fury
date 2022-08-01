@@ -68,7 +68,7 @@ Once you fill `GameState.hs` and `RenderState.hs` you should be able to run the 
 
 If you have configured well you vscode you should be able to run in-comment examples. If you can't something has gone wrong. Be sure you've followed the [instructions](#set-up-a-development-environment). Below there is an example of what you should see.
 
-
+![example of in-comment test](./assets/example-inline-test.gif)
 
 ## Refactors
 
