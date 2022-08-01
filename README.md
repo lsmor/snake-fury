@@ -1,12 +1,3 @@
-- [snake-fury](#snake-fury)
-  - [Introduction](#introduction)
-    - [note about not using monads](#note-about-not-using-monads)
-  - [Start coding](#start-coding)
-  - [Building and Running](#building-and-running)
-  - [Arquitecture](#arquitecture)
-  - [Solution.](#solution)
-  - [Set up a development environment](#set-up-a-development-environment)
-  - [Contributions](#contributions)
 # snake-fury
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/lsmor/snake-fury)
@@ -18,52 +9,53 @@
 - snake-fury isn't a tutorial but a challenge.
 - snake-fury is focused on learning by refactoring, not by example.
 
-The first leg means that you'll be asked to implement some functions/algorithms. It is expected that the challenger will be unable to implement them without some research on Hackage's documentation, blogs, youtube videos, etc. There will be guidelines to help the challenger. Nevertheless, an important skill when learning Haskell is to be able to search, read and understand the documentation that is (often, but not always) more complex and less accessible than other programming languages. 
+The first leg means that you'll be asked to implement some functions/algorithms. It is expected that the challenger will be unable to implement them without some research on Hackage's documentation, blogs, youtube videos, etc. There will be guidelines to help the challenger. Nevertheless, an important skill when learning Haskell is to be able to search, read and understand the documentation that is (often, but not always) more complex and less accessible than other programming languages.
 
-The second leg is even more interesting. Haskell is notoriously known for its difficulty and the popularization of the holy triad: Functor - Applicative - Monad. The are plenty of tutorials showing examples and hundreds of thousands of lines trying to make them accessible and newcomer-friendly... But with all due respect, It seems they all fail to explain: "Why monads? Why not other less mathematical abstraction? Why not classic OOP patterns?". The approach given by snake-fury is to make the same application twice... it sounds crazy, but the idea goes like this: You'll implement a "pure" version of the snake game: No monads, no functors, no abstractions [[see below](#markdown-header-note-about-not-using-monads)]. Then you will refactor the core application logic using the state and reader monads. Then you'll be asked to abstract your code and to use `mtl` classes to make your code less dependent on the concrete implementation.
-
+The second leg is even more interesting. Haskell is notoriously known for its difficulty and the popularization of the holy triad: Functor - Applicative - Monad. There are plenty of tutorials showing examples and hundreds of thousands of lines trying to make them accessible and newcomer-friendly... But with all due respect, It seems they all fail to explain: "Why monads? Why not other less mathematical abstraction? Why not classic OOP patterns?". The approach given by snake-fury is to make the same application twice... it sounds crazy, but the idea goes like this: You'll implement a "pure" version of the snake game: No monads, no functors, no abstractions [[see below](#markdown-header-note-about-not-using-monads)]. Then you will refactor the core application logic using the state and reader monads. Then you'll be asked to abstract your code and to use `mtl` classes to make your code less dependent on the concrete implementation.
 
 Below there is a dramatization of Haskell's learning curve. This challenge aims to be a helpful companion from the newby slope to the temple of oblivion... but be aware, nothing will save you from the temptation of abandon. Hopefully, you'll be able to climb up to the temple and spread the lambdas  
-
 
 ![dramatization of Haskell's learning curve](./assets/Haskell_learning_curve.png)
 
 ### note about not using monads
+
 > By that I mean, not using do notation nor functor/applicative/monads combinators like `liftA2`, `fmap`, `>>=`, etc...
-> 
 > Obviously, The IO and the asynchronous part of the code are provided and the challenger is not expected to solve it.
 
-## Start coding
+## Start coding. Building a MVP
 
-Be sure you have a haskell developement environment [up and running](#markdown-hearder-set-up-a-development-environment). If you don't want to install Haskell's toolchain yourself, you can use gitpod to quickly jump into an online environment. 
+Be sure you have a haskell developement environment [up and running](#markdown-hearder-set-up-a-development-environment). If you don't want to install Haskell's toolchain yourself, you can use gitpod to quickly jump into an online environment.
 
-Clone the code and move to `snake-fury-exercise1` branch . 
+Clone the code and move to `snake-fury-exercise` branch  
 
 ```bash
 git clone https://github.com/lsmor/snake-fury.git
 git checkout snake-fury-exercise
 ```
 
-I'd recommend to create a branch for your solution (ex: `git checkout -b my-solution`) but you can use the given one. You'll find the following folder structure:
+I'd recommend to create a branch for your solution (ex: `git checkout -b my-solution`) but you can use `snake-fury-exercise`. You should see this folder structure (among other files)
 
-```
+```bash
 app
  |- Main.hs            # Here is the entrypoint of your application. This is implemented for you
-src
- |- EventQueue.hs      # Here is the EventQueue. This is implemented for you
+srcWented for you
  |- GameState.hs       # here will go the logic of the game. You have to complete this file
  |- RenderState.hs     # here will go the data structure for rendering the game. You have to complete this file
  |- Initialization.hs  # some utility functions. You don't need to touch this file.
-exercises
- |- refactor-1.md
- |- refactor-2.md
- |- refactor-3.md
- |- refactor-4.md
- |- refactor-5b.md
 ```
-Each file correspond to each component in the system (and some utilities to keep code simpler). Be sure you read the about the (arquitecture)[#markdown-header-arquitecture] to understand why the code is splitted this way. Within files `GameState.hs` and `RenderState.hs` you have the exercises statements as comments. Notice that you'll need to implement as many auxiliar functions as you need to make it work. If you feel stuck you can check the [solution](#markdown-header-solution) I've implemented. It is totally fine if you implement a different one. 
 
-Once you fill those two files you'll have a minimum viable product. Now it is time to improve it!. In the `exercises` folder you have exercises for refactors. Follow them one by one as enumerated. One of the ideas is you feel the power of the type system when refactoring. 
+Open files `src/GameState.hs` and `src/RenderState.hs`. You'll find the exercises statements as comments.
+
+Each file correspond to each component in the system (and some utilities to keep code simpler). Be sure you read the about the [arquitecture](#markdown-header-arquitecture) to understand why the code is splitted this way. Notice that you'll need to implement as many auxiliar functions as you need to make it work. If you feel stuck you can check the [solution](#markdown-header-solution) I've implemented. It is totally fine if you implement a different one.
+
+Once you fill `GameState.hs` and `RenderState.hs` you should be able to run this.
+
+![example of running](./assets/snake-mpv.gif)
+
+
+## Refactors
+
+Once you fill those two files you'll have a minimum viable product. Now it is time to improve it!. In the `exercises` folder you have exercises for refactors. Follow them one by one as enumerated. One of the ideas is you feel the power of the type system when refactoring.
 
 - **refactor-1**: you will move from you mvp to a full snake game with all the functionality
 - **refactor-2**: you will refactor the logic of the game to use the state monad. Hopefully you'll find code much easier to read.
