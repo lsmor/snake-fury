@@ -50,7 +50,8 @@ I'd recommend to create a branch for your solution (ex: `git checkout -b my-solu
 ```bash
 app
  |- Main.hs            # Here is the entrypoint of your application. This is implemented for you
-srcWented for you
+src
+ |- EventQueue.hs      # Here is the EventQueue. This is implemented for you
  |- GameState.hs       # here will go the logic of the game. You have to complete this file
  |- RenderState.hs     # here will go the data structure for rendering the game. You have to complete this file
  |- Initialization.hs  # some utility functions. You don't need to touch this file.
