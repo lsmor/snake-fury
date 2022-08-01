@@ -145,7 +145,7 @@ The following diagram helps to visualize
 
 ## Set up a development environment
 
-I strongly recommend to use [ghcup](https://www.haskell.org/ghcup/) to manage your Haskell toolchain. And vscode as your editor. A loca development enrivonment can be setted up in three steps. [Check this guide](https://gist.github.com/lsmor/bb632565cd96be9da589b6e91f80f9ba)
+I strongly recommend to use [ghcup](https://www.haskell.org/ghcup/) to manage your Haskell toolchain. And vscode as your editor. A local development environment can be setted up in three steps. [Check this guide](https://gist.github.com/lsmor/bb632565cd96be9da589b6e91f80f9ba)
 
 ## Contributions
 
