@@ -1,24 +1,35 @@
 # Refactor 3: Monad Transformers
 
-In this refactor you'll work on the `GameState` and `RenderState` modules. From this point on, you'll feel you are overengineering your code. This is a difficult topic. I'd say that simple is better than complex, so the implementation as in refactor 2 is a good balance between complexity and simplicity. Nevertheless, In order to learn deeper about monads we need to move into the topic of monad transformers and `mtl` style. If you feel your code is getting less readable, keep in mind this kind of patterns are suited for more evolved software, so it may not fit well in this situation. It wont be that bad, though. 
+- [Refactor 3: Monad Transformers](#refactor-3-monad-transformers)
+  - [Step 1: Monad Stacks](#step-1-monad-stacks)
+    - [Task 1.1: Did you spot the subtle pattern?! That's the Reader Monad](#task-11-did-you-spot-the-subtle-pattern-thats-the-reader-monad)
+    - [Task 1.2: Refactor `RenderState`](#task-12-refactor-renderstate)
+  - [Step 2 (optional): The IO monad and async code](#step-2-optional-the-io-monad-and-async-code)
+    - [Task 2.1](#task-21)
+      - [template](#template)
 
-This refactor has two steps, which one is optional. 
+In this refactor you'll work on the `GameState` and `RenderState` modules. From this point on, you'll feel you are overengineering your code. This is a difficult topic. I'd say that simple is better than complex, so the implementation as in refactor 2 is a good balance between complexity and simplicity. Nevertheless, In order to learn deeper about monads we need to move into the topic of monad transformers and `mtl` style. If you feel your code is getting less readable, keep in mind this kind of patterns are suited for more evolved software, so it may not fit well in this situation. It wont be that bad, though.
+
+This refactor has two steps, which one is optional.
 
 - Step 1: Introduce the `ReaderT` transformer and monad stacks in general
   - Taks 1.1: use the `ReaderT` transformer to refactor a common pattern
   - Taks 1.2: Apply the same stack to the `RenderState` module
-- Step 2 (Optional): Work in the `IO` monad and asynchronous code. 
+- Step 2 (Optional): Work in the `IO` monad and asynchronous code.
   - Task 2.1: Re-implement your-self module EventQueue
-## Step 1: Monad Stacks.
 
-As you can guess, `State` monad is just an example of monad. In Haskell we have monads for error handling (`Maybe` and `Either e`), for doing input/output (`IO`), for parallelism (`Eval`), for read-only / write-only / read-write state (resp. `Reader`, `Write`, `State`), etc... 
+## Step 1: Monad Stacks
+
+As you can guess, `State` monad is just an example of monad. In Haskell we have monads for error handling (`Maybe` and `Either e`), for doing input/output (`IO`), for parallelism (`Eval`), for read-only / write-only / read-write state (resp. `Reader`, `Write`, `State`), etc...
 
 The problem with monads comes when you want to compose them. Meaning, what happend if I want to have do input/output and having a read-only environment, and a read-write state? I would need to use three different monad, but what type is that? AS we've seen in the previous refactor we have `State` for managing the read-write state. If I want to do all those effects, Does it exist a `IOReaderState` data type?. There existe something very similar: monad transformers.
-### Task 1.1: Did you spot the subtle pattern?! That's the Reader Monad!!
+
+### Task 1.1: Did you spot the subtle pattern?! That's the Reader Monad
 
 Did you notice that many functions in the `GameState` module uses the `BoardInfo` datatype? Of course!, the information about the size of the board is crucial all along the software. The `Reader` monad essentially abstract this pattern. When you have a function from some environment to some result `function :: env -> a`, that can be express as `Reader env a`. This is useful when you have multiple functions taking the same `env`. For example
 
 Without `Reader` monad
+
 ```haskell
 f :: env -> a
 g :: env -> b
@@ -30,6 +41,7 @@ j e = (f e, g e, h e)
 ```
 
 With `Reader` monad
+
 ```haskell
 f :: Reader env a
 g :: Reader env b
@@ -73,21 +85,23 @@ For the sake of practise, let's refactor `RenderState` module. Again, this feels
   - `updateRenderState :: RenderMessage -> RenderStep ()`
   - `updateMessages :: [RenderMessage] -> RenderStep ()`
 - Rename function `render` to `renderStep` with type `renderStep :: [RenderMessage] -> RenderStep Builder`. This function should update the `RenderState` w.r.t the received message, and produce a `Builder` of the updated state.
-- Create function `render` with type `render :: [RenderMessage] -> BoardInfo -> RenderState ->  (Builder, RenderState)`, which runs the monad stack producing the builder associated to the `RenderState` and the `RenderState` itself. 
+- Create function `render` with type `render :: [RenderMessage] -> BoardInfo -> RenderState ->  (Builder, RenderState)`, which runs the monad stack producing the builder associated to the `RenderState` and the `RenderState` itself.
 - function `main` should be broken now. Make it work!. Do you think `main` looks better now? By "better" I mean: Does it looks like code is more declarative?
 
-## Step 2 (optional): The IO monad and async code.
+## Step 2 (optional): The IO monad and async code
 
 This step consist in re-implementing the module `EventQueue.hs`. This module implements an asynchronous bounded channel in which we push our key strokes. Working in the `IO` is not more difficult than working in the `State` or `Reader` monad. The only difference is that `IO` monad can throw exceptions at any time for any reason.
 
-Any program which actually does something has to do input/ouput (reading files, putting text to console, etc...). The problem with the real world is that it is a mess, therefore if we have a function interacting with the real world, we should anotate it using `IO` monad. 
+Any program which actually does something has to do input/ouput (reading files, putting text to console, etc...). The problem with the real world is that it is a mess, therefore if we have a function interacting with the real world, we should anotate it using `IO` monad.
 
-### Task 2.1:
+### Task 2.1
 
 - make a backup copy of `EventQueue.hs`
 - Create a new `EventQueue.hs` file and paste the template below
 - Fill the template and check the game runs as always
+
 #### template
+
 ```haskell
 {-# LANGUAGE TypeApplications #-}
 
