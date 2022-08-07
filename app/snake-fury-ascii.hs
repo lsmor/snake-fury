@@ -11,7 +11,7 @@ import EventQueue (
 import Initialization (gameInitialization)
 import System.Environment (getArgs)
 import System.IO (BufferMode (NoBuffering), hSetBinaryMode, hSetBuffering, hSetEcho, stdin, stdout)
-import App (AppState (AppState), run, Env (Env))
+import Renderer (AppState (AppState), run, Env (Env))
 
 -- | main.
 main :: IO ()

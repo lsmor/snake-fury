@@ -55,6 +55,7 @@ library ascii
       snake-fury
     , base ^>=4.14
     , mtl ^>= 2.2.2
+    , bytestring ^>= 0.10.12.0
   default-language: Haskell2010
 
 library tui
@@ -97,8 +98,8 @@ library gui
 
 
 
-executable snake-fury
-  main-is: Main.hs
+executable snake-fury-ascii
+  main-is: snake-fury-ascii.hs
   other-modules:
       Paths_snake_fury
   hs-source-dirs:
@@ -109,6 +110,7 @@ executable snake-fury
   build-depends:
       base >=4.7 && <5
     , snake-fury
+    , ascii
     , bytestring ^>= 0.10.12.0
   default-language: Haskell2010
 
