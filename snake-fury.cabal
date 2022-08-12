@@ -70,7 +70,7 @@ library tui
   build-depends:
       snake-fury
     , base ^>=4.14
-    , brick ^>= 0.62
+    , brick ^>= 1.0
     , mtl ^>= 2.2.2
     , text ^>= 1.2
   default-language: Haskell2010
