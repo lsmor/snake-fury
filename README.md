@@ -124,8 +124,6 @@ stack run snake-fury -- 10 10 7
 
 > note: At the moment the `main` branch doesn't use frames per second but microseconds as input parameter. Hence `cabal run snake-fury -- 10 10 100000` will run at 10 fps. In the exercise branch, the input parameter is correct. So if you want to build from `main` be aware of this change
 
-Here there is an example 
-
 ## Architecture
 
 The general architecture of the software is the following:
