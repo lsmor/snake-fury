@@ -8,7 +8,7 @@
   - [Refactors](#refactors)
   - [Solution branches](#solution-branches)
   - [Building and Running](#building-and-running)
-  - [Arquitecture](#arquitecture)
+  - [architecture](#architecture)
   - [Set up a development environment](#set-up-a-development-environment)
   - [Contributions](#contributions)
 
@@ -59,7 +59,7 @@ src
 
 Open files `src/GameState.hs` and `src/RenderState.hs`. You'll find the exercises statements as comments.
 
-Each file correspond to each component in the system (and some utilities to keep code simpler). Be sure you read the about the [arquitecture](#arquitecture) to understand why the code is splitted this way. Notice that you'll need to implement as many auxiliar functions as you need to make it work. If you feel stuck you can check the [solution](#solution-branches) I've implemented. It is totally fine if you implement a different one.
+Each file correspond to each component in the system (and some utilities to keep code simpler). Be sure you read the about the [architecture](#architecture) to understand why the code is splitted this way. Notice that you'll need to implement as many auxiliar functions as you need to make it work. If you feel stuck you can check the [solution](#solution-branches) I've implemented. It is totally fine if you implement a different one.
 
 Once you fill `GameState.hs` and `RenderState.hs` you should be able to run the snake game in a terminal with the following command `cabal run snake-fury -- height width fps`. Use arrow keys to move the snake.
 
@@ -124,9 +124,9 @@ stack run snake-fury -- 10 10 7
 
 > note: At the moment the `main` branch doesn't use frames per second but microseconds as input parameter. Hence `cabal run snake-fury -- 10 10 100000` will run at 10 fps. In the exercise branch, the input parameter is correct. So if you want to build from `main` be aware of this change
 
-## Arquitecture
+## architecture
 
-The general arquitecture of the software is the following:
+The general architecture of the software is the following:
 
 - There are three major components:
   - An Event Queue: It keeps a queue of the following events to happen in the game based on the user keyboard input
@@ -141,7 +141,7 @@ Notice that two threads are necessary, since user could press keys faster than t
 
 The following diagram helps to visualize
 
-![Overview of the arquitecture](./assets/snake_arquitecture.png)
+![Overview of the architecture](./assets/snake_architecture.png)
 
 ## Set up a development environment
 
