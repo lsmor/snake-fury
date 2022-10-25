@@ -59,7 +59,7 @@ src
 
 Open files `src/GameState.hs` and `src/RenderState.hs`. You'll find the exercises statements as comments.
 
-Each file correspond to each component in the system (and some utilities to keep code simpler). Be sure you read the about the [architecture](#Architecture) to understand why the code is splitted this way. Notice that you'll need to implement as many auxiliar functions as you need to make it work. If you feel stuck you can check the [solution](#solution-branches) I've implemented. It is totally fine if you implement a different one.
+Each file correspond to each component in the system (and some utilities to keep code simpler). Be sure you read the about the [architecture](#architecture) to understand why the code is splitted this way. Notice that you'll need to implement as many auxiliar functions as you need to make it work. If you feel stuck you can check the [solution](#solution-branches) I've implemented. It is totally fine if you implement a different one.
 
 Once you fill `GameState.hs` and `RenderState.hs` you should be able to run the snake game in a terminal with the following command `cabal run snake-fury -- height width fps`. Use arrow keys to move the snake.
 
