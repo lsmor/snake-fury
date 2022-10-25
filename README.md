@@ -63,7 +63,7 @@ Each file correspond to each component in the system (and some utilities to keep
 
 Once you fill `GameState.hs` and `RenderState.hs` you should be able to run the snake game in a terminal with the following command `cabal run snake-fury -- height width fps`. Use arrow keys to move the snake.
 
-![example of running](./assets/snake-mpv.gif)
+![example of running](./assets/snake-mvp.gif)
 
 ### On using vscode
 
@@ -123,6 +123,8 @@ stack run snake-fury -- 10 10 7
 ```
 
 > note: At the moment the `main` branch doesn't use frames per second but microseconds as input parameter. Hence `cabal run snake-fury -- 10 10 100000` will run at 10 fps. In the exercise branch, the input parameter is correct. So if you want to build from `main` be aware of this change
+
+Here there is an example 
 
 ## Architecture
 
