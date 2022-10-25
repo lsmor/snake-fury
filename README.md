@@ -86,13 +86,13 @@ You've built a minimum viable product. Now it is time to improve it!. In the `ex
 You have multiple solutions branches, one for each refactor step and one for the mvp. Below you have the relation of branches and refactors. You can run `git branch -l` to see the list of all branches.
 
 - `solution-mvp` branch corresponds to the solution of the first exercise
-- `solution-refactor-1` branch corresponds to the solution of the first refactor in `assets/exercises/refactor-1`
-- `solution-refactor-2.1` branch corresponds to the solution of the second refactor, step 1 in `assets/exercises/refactor-2`
-- `solution-refactor-2.2` branch corresponds to the solution of the second refactor, step 2 in `assets/exercises/refactor-2`
-- `solution-refactor-3` branch corresponds to the solution of the third refactor in `assets/exercises/refactor-3`
-- `solution-refactor-4.1` branch corresponds to the solution of the fourth refactor, step 1 in `assets/exercises/refactor-4`
-- `solution-refactor-4.2` branch corresponds to the solution of the fourth refactor, step 2 in `assets/exercises/refactor-4`
-- `solution-refactor-5` branch corresponds to the solution of the fifth refactor in `assets/exercises/refactor-5`
+- `solution-refactor-1` branch corresponds to the solution of the first refactor in [exercises/refactor-1](exercises/refactor-1)
+- `solution-refactor-2.1` branch corresponds to the solution of the second refactor, step 1 in [exercises/refactor-2](exercises/refactor-2#step-1-apply-changes-locally)
+- `solution-refactor-2.2` branch corresponds to the solution of the second refactor, step 2 in [exercises/refactor-2](exercises/refactor-2#step-2-did-you-spot-the-pattern-thats-a-monad)
+- `solution-refactor-3` branch corresponds to the solution of the third refactor in [exercises/refactor-3](exercises/refactor-3)
+- `solution-refactor-4.1` branch corresponds to the solution of the fourth refactor, step 1 in [exercises/refactor-4](exercises/refactor-4#step-1-mtl-constraints)
+- `solution-refactor-4.2` branch corresponds to the solution of the fourth refactor, step 2 in [exercises/refactor-4](exercises/refactor-4#step-2-glue-together-renderstate-and-gamestate)
+- `solution-refactor-5` branch corresponds to the solution of the fifth refactor in [exercises/refactor-5](exercises/refactor-5)
 
 My solution might be different than yours, and that is totally fine.
 
