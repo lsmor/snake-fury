@@ -8,7 +8,7 @@
     - [Task 2.1](#task-21)
       - [template](#template)
 
-In this refactor you'll work on the `GameState` and `RenderState` modules. From this point on, you'll feel you are overengineering your code. This is a difficult topic. I'd say that simple is better than complex, so the implementation as in refactor 2 is a good balance between complexity and simplicity. Nevertheless, In order to learn deeper about monads we need to move into the topic of monad transformers and `mtl` style. If you feel your code is getting less readable, keep in mind this kind of patterns are suited for more evolved software, so it may not fit well in this situation. It wont be that bad, though.
+In this refactor you'll work on the `GameState` and `RenderState` modules. From this point on, you'll feel you are overengineering your code. This is a difficult topic. I'd say that simple is better than complex, so the implementation as in refactor 2 is a good balance between complexity and simplicity. Nevertheless, In order to learn deeper about monads we need to move into the topic of monad transformers and `mtl` style. If you feel your code is getting less readable, keep in mind this kind of patterns are suited for more evolved software, so it may not fit well in this situation. It won't be that bad, though.
 
 This refactor has two steps, which one is optional.
 
@@ -22,7 +22,7 @@ This refactor has two steps, which one is optional.
 
 As you can guess, `State` monad is just an example of monad. In Haskell we have monads for error handling (`Maybe` and `Either e`), for doing input/output (`IO`), for parallelism (`Eval`), for read-only / write-only / read-write state (resp. `Reader`, `Write`, `State`), etc...
 
-The problem with monads comes when you want to compose them. Meaning, what happend if I want to have do input/output and having a read-only environment, and a read-write state? I would need to use three different monad, but what type is that? AS we've seen in the previous refactor we have `State` for managing the read-write state. If I want to do all those effects, Does it exist a `IOReaderState` data type?. There existe something very similar: monad transformers.
+The problem with monads comes when you want to compose them. Meaning, what happend if I want to do input/output and having a read-only environment, and a read-write state? I would need to use three different monads, but what type is that? As we've seen in the previous refactor we have `State` for managing the read-write state. If I want to do all those effects, does it exist a `IOReaderState` data type? There exist something very similar: monad transformers.
 
 ### Task 1.1: Did you spot the subtle pattern?! That's the Reader Monad
 
@@ -55,14 +55,14 @@ j = do
   pure (a, b, c)
 ```
 
-You may think we haven't won anything. That's kind of true, but intention matters here. In the second example is very clear from the type signature that `env` is an important datatype in our software. It is used for configuration and as a read-only environment. Let's refactor `GameStep` to introduce the `ReaderT` transformer.
+You may think we haven't won anything. That's kind of true, but intention matters here. In the second example, it is very clear from the type signature that `env` is an important datatype in our software. It is used for configuration and as a read-only environment. Let's refactor `GameStep` to introduce the `ReaderT` transformer.
 
 - Introduce the following `imports`
   - `import Control.Monad.Trans.Reader (ReaderT (runReaderT), ask, runReader)`
   - `import Control.Monad.Trans.Class ( MonadTrans(lift) )`
-- change the `GameStep` to look like below. Try to understand what you are doing. (tip: why `ReaderT` but not `StateT`. Go to transformers library documentation and read more about them)
+- Change the `GameStep` to look like below. Try to understand what you are doing. (tip: why `ReaderT` but not `StateT`. Go to transformers library documentation and read more about them)
   - `type GameStep a = ReaderT BoardInfo (State GameState) a`
-- Change all functions with signature `BoardInfo -> GameStep a` to `GameStep a`. Use function `ask` to get the read only env . These are:
+- Change all functions with signature `BoardInfo -> GameStep a` to `GameStep a`. Use function `ask` to get the read only env. These are:
   - `makeRandomPoint :: GameStep Point`
   - `newApple :: GameStep Point`
   - `extendSnake ::  Point -> GameStep DeltaBoard`
@@ -73,30 +73,30 @@ You may think we haven't won anything. That's kind of true, but intention matter
 
 ### Task 1.2: Refactor `RenderState`
 
-For the sake of practise, let's refactor `RenderState` module. Again, this feels like a total overengineering. Keep in mind this refactor will break something in the `main` module. This is done on pourpose.
+For the sake of practice, let's refactor `RenderState` module. Again, this feels like a total overengineering. Keep in mind this refactor will break something in the `main` module. This is done on purpose.
 
-- import the following:
+- Import the following:
   - `import Control.Monad.Trans.Reader (ReaderT (runReaderT), asks, ask)`
   - `import Control.Monad.Trans.State.Strict (State, put, get, runState, evalState)`
   - `import Control.Monad.Trans (lift)`
   - More import will be necessary, but you should find out yourself.
 - Create a new datatype `type RenderStep a = ReaderT BoardInfo (State RenderState) a`
-- Change these functions types and modify their body accordingly:
+- Change these function types and modify their body accordingly:
   - `updateRenderState :: RenderMessage -> RenderStep ()`
   - `updateMessages :: [RenderMessage] -> RenderStep ()`
 - Rename function `render` to `renderStep` with type `renderStep :: [RenderMessage] -> RenderStep Builder`. This function should update the `RenderState` w.r.t the received message, and produce a `Builder` of the updated state.
-- Create function `render` with type `render :: [RenderMessage] -> BoardInfo -> RenderState ->  (Builder, RenderState)`, which runs the monad stack producing the builder associated to the `RenderState` and the `RenderState` itself.
-- function `main` should be broken now. Make it work!. Do you think `main` looks better now? By "better" I mean: Does it looks like code is more declarative?
+- Create a function `render` with type `render :: [RenderMessage] -> BoardInfo -> RenderState ->  (Builder, RenderState)`, which runs the monad stack producing the builder associated to the `RenderState` and the `RenderState` itself.
+- Function `main` should be broken now. Make it work! Do you think `main` looks better now? By "better" I mean: Does it looks like code is more declarative?
 
 ## Step 2 (optional): The IO monad and async code
 
-This step consist in re-implementing the module `EventQueue.hs`. This module implements an asynchronous bounded channel in which we push our key strokes. Working in the `IO` is not more difficult than working in the `State` or `Reader` monad. The only difference is that `IO` monad can throw exceptions at any time for any reason.
+This step consists in re-implementing the module `EventQueue.hs`. This module implements an asynchronous bounded channel in which we push our key strokes. Working in the `IO` is not more difficult than working in the `State` or `Reader` monad. The only difference is that `IO` monad can throw exceptions at any time for any reason.
 
-Any program which actually does something has to do input/ouput (reading files, putting text to console, etc...). The problem with the real world is that it is a mess, therefore if we have a function interacting with the real world, we should anotate it using `IO` monad.
+Any program which actually does something has to do input/ouput (reading files, putting text to console, etc...). The problem with the real world is that it is a mess, therefore if we have a function interacting with the real world, we should annotate it using `IO` monad.
 
 ### Task 2.1
 
-- make a backup copy of `EventQueue.hs`
+- Make a backup copy of `EventQueue.hs`
 - Create a new `EventQueue.hs` file and paste the template below
 - Fill the template and check the game runs as always
 

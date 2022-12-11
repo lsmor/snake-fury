@@ -6,7 +6,7 @@
     - [Task 1.2: Create a single all-in `App` type](#task-12-create-a-single-all-in-app-type)
   - [Congratulations](#congratulations)
 
-We are finally in the last step of this project. We are going to create a fully abstracted version of our code. The way we are doing this is by creating classes for each component of our code. Let me recall the general arquitecture of the code.
+We are finally in the last step of this project. We are going to create a fully abstracted version of our code. The way we are doing this is by creating classes for each component of our code. Let me recall the general architecture of the code.
 
 ![snake-fury arquitecture](../../snake-fury/assets/snake_arquitecture.png)
 
@@ -17,12 +17,12 @@ Let's summarize what we have:
   - The screen
 - Two external services communicating with the external devices
   - The `EventQueue` (read from the keyboard)
-  - The renderer device. In our case is the console, but it could be a SDL2's pixel buffer or a OpenGL Data Structure
+  - The renderer device. In our case, it is the console, but it could be a SDL2's pixel buffer or a OpenGL Data Structure
 - One main thread which read from the `EventQueue` and send to the renderer device. The main thread is separated in:
   - The GameState
   - The RenderState
 
-Notice that the core of the software is the main thread. In theory we could change all external components with out touching the logic at all. Example of this are:
+Notice that the core of the software is the main thread. In theory we could change all external components without touching the logic at all. Examples of this are:
 
 - We use ncurses frontend
   - We read events from terminal but using ncurses built-in Event system
@@ -39,7 +39,7 @@ This refactoring is separated in one Step with two task.
 
 ## Step 1: abstract away your code
 
-The idea is that we are going to define an `App` type which will have instances for many type classes expressing the components above. If we'd like to change frontends, we will just create new type `AppSDL` and create the convinient instances.
+The idea is that we are going to define an `App` type which will have instances for many type classes expressing the components above. If we'd like to change frontends, we will just create new type `AppSDL` and create the convenient instances.
 
 ### Task 1.1: Abstract the environment
 
@@ -48,7 +48,7 @@ The idea is that we are going to define an `App` type which will have instances 
 
 ### Task 1.2: Create a single all-in `App` type
 
-- modify `App.hs` so your `App` type has new an environment with the `BoardInfo` and the `EventQueue`.
+- modify `App.hs` so your `App` type has now an environment with the `BoardInfo` and the `EventQueue`.
 
 ```haskell
 data AppState = AppState GameState RenderState
@@ -57,9 +57,9 @@ newtype App m a = App {runApp :: ReaderT Env (StateT AppState m) a}
   deriving (Functor , Applicative, Monad, MonadState AppState, MonadReader Env, MonadIO)
 ```
 
-You may wonder why using a environment with the `EventQueue` on it, when the event queue is not part of the core logic (only the events it contains are). Certainly, we could pass the `EventQueue` as a parameter to all the functions that need it, but this is a little unconvient. Also, you may notice that we are putting a mutable asynchronous queue into a read-only environment. That doesn't look like the things Haskell promises!! precisely, Haskell is famous for not having global mutable state, or mutable variables out of the box. This pattern of pushing mutable structures into a read-only environment is actually quite common, and it is called the `ReaderT` pattern. Strictly speaking, we are _not_ using such a pattern here, but we are taking some of the ideas of this pattern and aplaying them to our piece of software.
+You may wonder why using an environment with the `EventQueue` on it, when the event queue is not part of the core logic (only the events it contains are). Certainly, we could pass the `EventQueue` as a parameter to all the functions that need it, but this is a little inconvenient. Also, you may notice that we are putting a mutable asynchronous queue into a read-only environment. That doesn't look like the things Haskell promises!! Precisely, Haskell is famous for not having global mutable states, or mutable variables out of the box. This pattern of pushing mutable structures into a read-only environment is actually quite common, and it is called the `ReaderT` pattern. Strictly speaking, we are _not_ using such a pattern here, but we are taking some of the ideas of this pattern and applying them to our piece of software.
 
-- Define instaces for `Env` so it can use functions in `GameState` and `RenderState` modules.
+- Define instances for `Env` so it can use functions in `GameState` and `RenderState` modules.
 
 ```haskell
 instance HasBoardInfo Env where
@@ -69,7 +69,7 @@ instance HasEventQueue Env where
   getEventQueue = undefined
 ```
 
-- Defined the following type classes. If you look closely, we only defined what is strictly necessary for the core logic. We need to pull events from somewhere, we need to render somehow, and we need to update both state sending messages.
+- Define the following type classes. If you look closely, we only define what is strictly necessary for the core logic. We need to pull events from somewhere, we need to render somehow, and we need to update both state sending messages.
 
 ```haskell
 class Monad m => MonadQueue m where
@@ -84,9 +84,9 @@ class Monad m => MonadRender m where
   
 ```
 
-You may be surprise `updateRenderState` does not produce a `Builder` as we do in the `RenderState` module. The reason for that is because we don't want to be bounded to a specific implementation of the rendering. `Builder` just works to render into the console as we do now, but it is useless if we'd like to change frontends.
+You may be surprised `updateRenderState` does not produce a `Builder` as we do in the `RenderState` module. The reason for that is because we don't want to be bounded to a specific implementation of the rendering. `Builder` just works to render into the console as we do now, but it is useless if we'd like to change frontends.
 
-- Now we need to defined instances for `App` monad
+- Now we need to define instances for `App` monad
 
 ```haskell
 instance (???) => MonadQueue (App m) where -- you will need to fill the ???
@@ -100,7 +100,7 @@ instance (???) => MonadRender (App m) where -- you will need to fill the ???
   render = undefined
 ```
 
-- last, let's defined the logic of the game.
+- last, let's define the logic of the game.
 
 ```haskell
 
@@ -135,4 +135,4 @@ Of course, there is a lot of missing topics. From here, you can try to write a S
 
 Other topics you should explore, are free-monads and effect systems, the ReaderT pattern, type level programming, and many many more.
 
-If you've found any refactoring too difficult or missintroduced, feel free to open an issue.
+If you've found any refactoring too difficult or badly introduced, feel free to open an issue.
