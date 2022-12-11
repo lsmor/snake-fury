@@ -74,7 +74,7 @@ let (delta, game_state2) = extendSnake newHead board_info game_state1
 extendAndCreateNewApple newHead board_info = extendSnake newHead board_info >> newApple board_info >> ...
 ```
 
-Wait what? Did the state handling disappear?. Yes!, that's the magic of the state monad. You defined small functions modifying the state and then you change them together using operators like `>>`, `>>=` or `>=>`. Also, Haskell provides syntactic sugar for those operators in the form of the `do`-notation. You should read about it.
+Wait what? Did the state handling disappear?. Yes!, that's the magic of the state monad. You defined small functions modifying the state and then you chain them together using operators like `>>`, `>>=` or `>=>`. Also, Haskell provides syntactic sugar for those operators in the form of the `do`-notation. You should read about it.
 
 ### Task 2.1: Refactor your code using the state monad
 
