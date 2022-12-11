@@ -36,7 +36,7 @@ Below there is a dramatization of Haskell's learning curve. This challenge aims 
 
 ## Start coding. Building a MVP
 
-Be sure you have a haskell developement environment [up and running](#set-up-a-development-environment). If you don't want to install Haskell's toolchain yourself, you can use gitpod to quickly jump into an online environment.
+Be sure you have a haskell development environment [up and running](#set-up-a-development-environment). If you don't want to install Haskell's toolchain yourself, you can use gitpod to quickly jump into an online environment.
 
 Clone the code and move to `snake-fury-exercise` branch  
 
@@ -59,7 +59,7 @@ src
 
 Open files `src/GameState.hs` and `src/RenderState.hs`. You'll find the exercises statements as comments.
 
-Each file correspond to each component in the system (and some utilities to keep code simpler). Be sure you read the about the [architecture](#architecture) to understand why the code is splitted this way. Notice that you'll need to implement as many auxiliar functions as you need to make it work. If you feel stuck you can check the [solution](#solution-branches) I've implemented. It is totally fine if you implement a different one.
+Each file correspond to each component in the system (and some utilities to keep code simpler). Be sure you read the about the [architecture](#architecture) to understand why the code is splitted this way. Notice that you'll need to implement as many auxiliary functions as you need to make it work. If you feel stuck you can check the [solution](#solution-branches) I've implemented. It is totally fine if you implement a different one.
 
 Once you fill `GameState.hs` and `RenderState.hs` you should be able to run the snake game in a terminal with the following command `cabal run snake-fury -- height width fps`. Use arrow keys to move the snake.
 
@@ -78,7 +78,7 @@ You've built a minimum viable product. Now it is time to improve it!. In the `ex
 - **refactor-1**: you will move from you mvp to a full snake game with all the functionality: like a score counter and increasing speed. Also, you'll deal with performance issue the mvp has.
 - **refactor-2**: you will refactor the logic of the game to use the state monad. Hopefully you'll find code much easier to read.
 - **refactor-3**: you will refactor the logic of the game to use the reader + state monad stack. Also, as an optional but recommended exercise, you can learn about the IO monad
-- **refactor-4**: You will refactor the code to use `mtl` like constraints. Now code looks a little bit abstract but it is easy to read and follow
+- **refactor-4**: You will refactor the code to use `mtl` like constraints. Now the code looks a little bit abstract but it is easy to read and follow
 - **refactor-5**: Finally, you'll refactor the code to be fully abstracted over the monad stack you use. You will create you own type classes expressing exactly the actions you want to execute.
 
 ## Solution branches
@@ -98,9 +98,9 @@ My solution might be different than yours, and that is totally fine.
 
 ## Building and Running
 
-This project is prepare for both `cabal` and `stack`. At the moment the only major difference between this tools is the building plan. If you are a newcommer, you'll find `stack` slightly easier to use, but cabal is also fairly easy. Even if you are using `stack` this repository wont allow it to install `ghc`, you need to have it installed in your `PATH`. Check [this](#set-up-a-development-environment) section for more information.
+This project is prepare for both `cabal` and `stack`. At the moment the only major difference between this tools is the building plan. If you are a newcommer, you'll find `stack` slightly easier to use, but cabal is also fairly easy. Even if you are using `stack`, this repository won't allow it to install `ghc`, you need to have it installed in your `PATH`. Check [this](#set-up-a-development-environment) section for more information.
 
-Notice the `main` branch is experimental and can change (even into a non-compilable code), so don't use it to build the project. For stable branches, use `solution-xxx`. To run the executable, you have to build first with either `cabal` or `stack` using.
+Notice the `main` branch is experimental and can change (even into a non-compilable code), so don't use it to build the project. For stable branches, use `solution-xxx`. To run the executable, you have to build first with either `cabal` or `stack` using
 
 ```bash
 git checkout solution-xxx
@@ -122,7 +122,7 @@ cabal run snake-fury -- 10 10 7
 stack run snake-fury -- 10 10 7
 ```
 
-> note: At the moment the `main` branch doesn't use frames per second but microseconds as input parameter. Hence `cabal run snake-fury -- 10 10 100000` will run at 10 fps. In the exercise branch, the input parameter is correct. So if you want to build from `main` be aware of this change
+> note: At the moment the `main` branch doesn't use frames per second but microseconds as input parameter. Hence `cabal run snake-fury -- 10 10 100000` will run at 10 fps. In the exercise branch, the input parameter is correct. So if you want to build from `main` be aware of this change.
 
 ## Architecture
 
@@ -133,11 +133,11 @@ The general architecture of the software is the following:
   - A Game State: Is the logic state. It keeps track on the snake body, the current apple, the direction of movement, etc...
   - A Render State: Is the game board. Instead of building up the board from the GameState, we keep an array in memory and modify it as convenient
 - Each compoment send a message to the next one in the following order: (user keyboard) -> EventQueue -> GameState -> RenderState -> (render device)
-- we have two threads.
-  - The sencondary thread is continuously reading from users keyboard and pushing the key strokes into an asynchronous EventQueue
+- We have two threads:
+  - The secondary thread is continuously reading from user's keyboard and pushing the key strokes into an asynchronous EventQueue
   - The main thread reads at steady time from the EventQueue, and based on what the user has pressed, it runs the game logic and prints the board in the console
 
-Notice that two threads are necessary, since user could press keys faster than the game updates (fps). For example let say we run a frame each second and a half (normal speed in the snake game.), then a user is likely to press keys faster than that. If the key strokes are catch only when a frame is about to be render, then many stroke will be lost.
+Notice that two threads are necessary, since user could press keys faster than the game updates (fps). For example let say we run a frame each second and a half (normal speed in the snake game), then a user is likely to press keys faster than that. If the key strokes are catched only when a frame is about to be rendered, then many strokes will be lost.
 
 The following diagram helps to visualize
 
