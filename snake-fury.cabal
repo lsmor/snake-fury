@@ -5,7 +5,6 @@ description:    Please see the README on GitHub at <https://github.com/lsmor/sna
 homepage:       https://github.com/lsmor/snake-fury#readme
 bug-reports:    https://github.com/lsmor/snake-fury/issues
 author:         Luis Morillo Najarro
-maintainer:     example@example.com
 copyright:      2021 Luis Morillo Najarro
 license:        BSD-3-Clause
 license-file:   LICENSE
