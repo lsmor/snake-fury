@@ -10,15 +10,15 @@
     - [Task 2.2: Modify function `move` and `render`](#task-22-modify-function-move-and-render)
     - [Task 2.3: Create a new module and move `gameloop` there](#task-23-create-a-new-module-and-move-gameloop-there)
 
-In this refactor you'll learn about `mtl`-style and how it improves code. First, you need to do one test: In module `GameState.hs` change `GameStep` type for the one below as see what happens whe you build
+In this refactor you'll learn about `mtl`-style and how it improves code. First, you need to do one test: In module `GameState.hs` change `GameStep` type for the one below as see what happens when you build
 
 ```haskell
 type GameStep a = StateT GameState (Reader BoardInfo) a -- import the necessary stuff
 ```
 
-Probably many errors are jumping into your editor!. As you can see all we've done, is swaping the order of `Reader` and `State` monad. This is not a semantic change (changing the order of monads can lead to semantics changes in general, but not for this two monads in particular). In other words, our functions should do exactly the same thing as before, modifying the state as expected and reading the configuration as expected too. So, where do all this errors come from? If you look carefully, it is all related to `lift` function.
+Probably many errors are jumping into your editor! As you can see, all we've done is swapping the order of `Reader` and `State` monad. This is not a semantic change (changing the order of monads can lead to semantic changes in general, but not for this two monads in particular). In other words, our functions should do exactly the same thing as before, modifying the state as expected and reading the configuration as expected too. So, where do all these errors come from? If you look carefully, it is all related to `lift` function.
 
-The reason is that we are working with `GameStep` type, which is a concrete type. It is a specific monad, so we are bound to its implementation, therefore changing `ReaderT BoardInfo (State GameState) a` by `StateT GameState (Reader BoardInfo) a`, do change the underlying monad and propagates that through the code. Instead we'd like to work with an abstract version of this: we would like our functions to run in any monad with state `GameState` and with read-only environment `BoardInfo`. We don't care which monad it is. Below there are some example of monads with these capabilities
+The reason is that we are working with `GameStep` type, which is a concrete type. It is a specific monad, so we are bound to its implementation, therefore changing `ReaderT BoardInfo (State GameState) a` by `StateT GameState (Reader BoardInfo) a`, does change the underlying monad and propagates that through the code. Instead we'd like to work with an abstract version of this: we would like our functions to run in any monad with state `GameState` and with read-only environment `BoardInfo`. We don't care which monad it is. Below there are some examples of monads with these capabilities
 
 ```haskell
 type GameStep1      a = ReaderT BoardInfo (State GameState)                a -- has access to GameState and BoardInfo as updatable state and read-only environ
@@ -28,7 +28,7 @@ type GameStepWriter a = ReaderT BoardInfo (StateT GameState (Writer Text)) a -- 
 type GameStepError  a = ReaderT BoardInfo (StateT GameState (Except Text)) a -- same as above, but aborts execution on error.
 ```
 
-As you can see, when we stack transformers one on top of each other, we end up with different monads with different capabilities. This is when `mtl` comes to rescue. This library defines typeclasses expressing exactly what we want: _any monad with having a mutable-like state of type `GameState`_ or _any monad with having a read only environment of type `BoardInfo`_. These classes are called `MonadReader` and `MonadState` and they are indexed by the read and state types. Read the [documentation](https://hackage.haskell.org/package/mtl-2.2.2) of `mtl` library to get use to it.
+As you can see, when we stack transformers one on top of each other, we end up with different monads with different capabilities. This is when `mtl` comes to rescue. This library defines typeclasses expressing exactly what we want: _any monad with having a mutable-like state of type `GameState`_ or _any monad with having a read-only environment of type `BoardInfo`_. These classes are called `MonadReader` and `MonadState` and they are indexed by the read and state types. Read the [documentation](https://hackage.haskell.org/package/mtl-2.2.2) of `mtl` library to get use to it.
 
 This refactor is divided in two Steps:
 
@@ -39,35 +39,32 @@ This refactor is divided in two Steps:
 - Step 2: Glue the `RenderState` and the `GameState` into a single app
   - Task 2.1: Rewrite functions to work on `Has`-like type classes
   - Taks 2.2: Change the type of `render` and `move`
-  - Task 2.3: Write a `App` with all you need. Redifine the `gameloop`
+  - Task 2.3: Write an `App` with all you need. Redefine the `gameloop`
 
 ## Step 1: mtl constraints
 
-This step you will move from `Control.Monad.Trans.XXXX` to `Control.Monad.XXXX`. This modules belongs to different packages `transformers` and `mtl`. The later depends on the former. The module hierarchy looks like the follow:
+This step, you will move from `Control.Monad.Trans.XXXX` to `Control.Monad.XXXX`. These modules belong to different packages `transformers` and `mtl`. The later depends on the former. The module hierarchy looks like the follow:
 
 - Modules `Control.Monad.Trans.XXXX` have only concrete implementations of monad transformers. For example: module `Control.Monad.Trans.Reader` contains `ReaderT` type
 - Modules `Control.Monad.XXXX` have concrete _and_ abstract implementations. For example: module `Control.Monad.Reader` contains type `ReaderT` and type class `MonadReader`
 
-In general, you want to use modules from `mtl` package, hence `Control.Monad.XXXX` because is more abstract. And abstraction is _almost always_ a good idea.
+In general, you want to use modules from `mtl` package, hence `Control.Monad.XXXX` because it is more abstract. And abstraction is _almost always_ a good idea.
 
 ### Task 1.0: Small change on Event
 
-this task is a unrelated to `mtl` or monads, but it is convenient as this point of development.
+This task is unrelated to `mtl` or monads, but it is convenient at this point of development.
 
 - Move `Event` type from `EventQueue.hs` to `GameState.hs`
 - Fix `import` staments in all files that aren't compiling and re-build the project
-- modify function `move` function in `GameState.hs` :
-  - add one extra `Event` parameter to so now it should have type `move :: Event -> BoardInfo -> GameState -> ([Board.RenderMessage], GameState)`
+- Modify function `move` in `GameState.hs` :
+  - Add one extra `Event` parameter so now it should have type `move :: Event -> BoardInfo -> GameState -> ([Board.RenderMessage], GameState)`
   - The logic under the new parameter is currently in `Main.gameloop` (when pattern matching on `event`). That logic should be moved to `move` function.
-class HasGameState state where
-  getGameState :: state -> GameState
-  setGameState :: state -> GameState -> state
 
-After this change, does the `gameloop` function looks more similar to the diagram shown in the README.md?
+After this change, does the `gameloop` function look more similar to the diagram shown in the README.md?
 
 ### Task 1.1: Create a newtype with the capabilities you want
 
-This task will expose you to a common pattern which is to define you monad stacks within a newtype wrapper which implements only the features you'd like.
+This task will expose you to a common pattern which is to define your monad stack within a newtype wrapper which implements only the features you'd like.
 
 (hint: This exercise looks difficult, but is all about wrapping and unwrapping the newtype)
 
@@ -78,14 +75,14 @@ This task will expose you to a common pattern which is to define you monad stack
 - Implement `MonadState GameState` instance for the newtype
 - Implement `MonadReader BoardInfo` instance for the newtype
 
-Essentialy, you are telling the compiler that your `GameStep` type has this capabilities. Probably you've found this repetitive. And it is!!, actually the compiler can do this for you.
+Essentially, you are telling the compiler that your `GameStep` type has these capabilities. Probably you've found this repetitive. And it is!!, actually the compiler can do this for you.
 
 - In `RenderState.hs` define `newtype RenderStep m a = RenderStep {runRenderStep :: ReaderT BoardInfo (StateT RenderState m) a}`
 - Implement `Functor`, `Applicative`, `Monad`, `MonadState GameState`, `MonadReader BoardInfo` for `RenderStep` using `GeneralizedNewtypeDeriving`.
 
 ### Task 1.2: Abstract your functions
 
-- In every function using `GameStep` or `RenderStep` you should use `mtl` constraints. For example: If you have a function `fun :: GameStep a` now it will have type `fun :: (MonadState GameStep, MonadReader BoardInfo) => m a`. This means _Don't use GameStep directyly, but any monad with State and Read envs_
+- In every function using `GameStep` or `RenderStep` you should use `mtl` constraints. For example: if you have a function `fun :: GameStep a` now it will have type `fun :: (MonadState GameStep, MonadReader BoardInfo) => m a`. This means _Don't use GameStep directyly, but any monad with State and Read envs_
 
 - The functions you should change are:
   - `makeRandomPoint` from `GameState.hs`
@@ -102,9 +99,9 @@ Essentialy, you are telling the compiler that your `GameStep` type has this capa
 
 ## Step 2: Glue Together RenderState and GameState
 
-The current state of things if satisfactory, as we can change the monad stack and our code will still compile and run with minimum changes. If you don't believe me, try to swap `Reader` and `State` in monads  `GameStep` or `RenderStep`. Now you should not have the problem of all your functions not compiling.
+The current state of things is satisfactory, as we can change the monad stack and our code will still compile and run with minimum changes. If you don't believe me, try to swap `Reader` and `State` in monads  `GameStep` or `RenderStep`. Now you should not have the problem of all your functions not compiling.
 
-Nevertheless, we have a little problem still. Take a look to `Main.gameloop` function. This function is very error prone, because we need to take care of manually passing updates state to the next execution of the loop. Also, it is on charge of pulling event, updting state and putting the render into the console. Just to reminder. This is how our arquitecture look like:
+Nevertheless, we have a little problem still. Take a look to `Main.gameloop` function. This function is very error prone, because we need to take care of manually passing updated state to the next execution of the loop. Also, it is on charge of pulling event, updating state and putting the render into the console. Just to reminder. This is how our architecture looks like:
 
 ![snake-fury arquitecture](../../snake-fury/assets/snake_arquitecture.png)
 
@@ -120,7 +117,7 @@ gameloop = forever $ do
     render messages
 ```
 
-This is impossible to define in `Haskell` with `mtl`-style code. Think what would `get` return? the `GameState` or the `RenderState`?. By the way `mtl` classes are implemented, this code can't be implemented. What we can do is to defined a common state called `AppState` which has both the `GameState` and the `RenderState`. But, now we would run into a problem. Our functions are defined for `MonadState GameState` and `MonadState RenderState`.
+This is impossible to define in `Haskell` with `mtl`-style code. Think what would `get` return? the `GameState` or the `RenderState`? By the way `mtl` classes are implemented, this code can't be implemented. What we can do is to define a common state called `AppState` which has both the `GameState` and the `RenderState`. But, now we would run into a problem. Our functions are defined for `MonadState GameState` and `MonadState RenderState`.
 
 ### Task 2.1: Define `Has` type classes
 
