@@ -68,7 +68,7 @@ This task will expose you to a common pattern which is to define your monad stac
 
 (hint: This exercise looks difficult, but is all about wrapping and unwrapping the newtype)
 
-- Modify `GameStep` from `ReaderT BoardInfo (State GameState) a` to `newtype GameStep m a = GameStep {runGameStep :: ReaderT BoardInfo (StateT GameState m) a}`
+- Modify `GameStep` from `ReaderT BoardInfo (State GameState) a` to `newtype GameStep m a = GameStep {runGameStep :: ReaderT BoardInfo (StateT GameState m) a}` (using the language extension `FlexibleContexts`)
 - Implement `Functor` instance for the newtype
 - Implement `Applicative` instance for the newtype
 - Implement `Monad` instance for the newtype
@@ -82,7 +82,7 @@ Essentially, you are telling the compiler that your `GameStep` type has these ca
 
 ### Task 1.2: Abstract your functions
 
-- In every function using `GameStep` or `RenderStep` you should use `mtl` constraints. For example: if you have a function `fun :: GameStep a` now it will have type `fun :: (MonadState GameStep, MonadReader BoardInfo) => m a`. This means _Don't use GameStep directyly, but any monad with State and Read envs_
+- In every function using `GameStep` or `RenderStep` you should use `mtl` constraints. For example: if you have a function `fun :: GameStep a` now it will have type `fun :: (MonadState GameState, MonadReader BoardInfo) => m a`. This means _Don't use GameStep directly, but any monad with State and Read envs_
 
 - The functions you should change are:
   - `makeRandomPoint` from `GameState.hs`
