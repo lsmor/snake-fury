@@ -208,7 +208,7 @@ import Control.Monad.State (MonadState (get), gets, StateT (runStateT), evalStat
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import EventQueue (EventQueue, readEvent, setSpeed)
 import Control.Concurrent (threadDelay)
-import Control.Monad (forever)
+import Control.Monad (unless)
 
 -- This is the new state, which glue together Game and Render states.
 data AppState = AppState GameState RenderState
@@ -235,11 +235,13 @@ gameStep = undefined -- try implement this function without do-notation. Using j
 -- The gameloop is easy as hell. Read the score and wait the requiered time. Then run the gameStep.
 -- This function is implemented for easiness.
 gameloop :: (MonadReader BoardInfo m, MonadState state m, HasGameState state, HasRenderState state, MonadIO m) => EventQueue -> m ()
-gameloop queue = forever $ do
+gameloop queue = do
   s <- gets (score . getRenderState)
   new_speed <- liftIO $ setSpeed s queue
   liftIO $ threadDelay new_speed
   gameStep queue
+  game_over <- gets (gameOver . getRenderState)
+  unless game_over (gameloop queue)
 
 -- This function runs the gameloop.
 run :: BoardInfo -> AppState -> EventQueue -> IO ()
