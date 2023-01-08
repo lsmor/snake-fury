@@ -118,6 +118,8 @@ gameloop = forever $ do
   w <- setSpeedOnScore 
   liftIO $ threadDelay w
   gameStep
+  isGameOver <- gets (gameOver . getRenderState)
+  unless isGameOver gameloop
 
 -- Run the application as usual
 run :: Env -> AppState -> IO ()
