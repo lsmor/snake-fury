@@ -5,7 +5,7 @@
 
 module App where
 import GameState (GameState, move, HasGameState (getGameState, setGameState), Event)
-import RenderState (RenderState (score), BoardInfo, HasRenderState (getRenderState, setRenderState), RenderMessage, updateMessages, HasBoardInfo (getBoardInfo), buildBoard)
+import RenderState (RenderState (score, gameOver), BoardInfo, HasRenderState (getRenderState, setRenderState), RenderMessage, updateMessages, HasBoardInfo (getBoardInfo), buildBoard)
 import qualified RenderState
 import Control.Monad.Reader (MonadReader (ask), asks, ReaderT (runReaderT))
 import Control.Monad.State (MonadState (get), gets, StateT (runStateT), evalStateT)
@@ -15,6 +15,7 @@ import Control.Concurrent (threadDelay, readMVar, putMVar)
 import Control.Monad (forever)
 import qualified Data.ByteString.Builder as B
 import System.IO (stdout)
+import Control.Monad (unless)
 
 
 data AppState = AppState GameState RenderState
@@ -96,10 +97,12 @@ gameStep :: (MonadQueue m, MonadSnake m, MonadRender m) => m ()
 gameStep = pullEvent >>= updateGameState >>= updateRenderState >> render
 
 gameloop :: (MonadQueue m, MonadSnake m, MonadRender m, MonadState state m, HasRenderState state, MonadReader env m, HasEventQueue env, MonadIO m) => m ()
-gameloop = forever $ do
+gameloop = do
   w <- setSpeedOnScore 
   liftIO $ threadDelay w
   gameStep
+  isGameOver <- gets (gameOver . getRenderState)
+  unless isGameOver gameloop
 
 run :: Env -> AppState -> IO ()
 run env app = runApp gameloop `runReaderT` env `evalStateT` app
