@@ -13,10 +13,11 @@ import EventQueue (
  )
 import GameState (GameState, move)
 import Initialization (gameInitialization)
-import RenderState (BoardInfo, RenderState (score), render)
+import RenderState (BoardInfo, RenderState (score, gameOver), render)
 import System.Environment (getArgs)
 import System.IO (BufferMode (NoBuffering), hSetBinaryMode, hSetBuffering, hSetEcho, stdin, stdout)
 import qualified Data.ByteString.Builder as B
+import Control.Monad (unless)
 
 -- The game loop is easy:
 --   - wait some time
@@ -31,9 +32,10 @@ gameloop binf gstate rstate queue = do
   event <- readEvent queue
   (delta, gstate') <- move event binf gstate
   (builder, rstate') <- render delta binf rstate
+  let isGameOver = gameOver rstate'
   putStr "\ESC[2J" --This cleans the console screen
   B.hPutBuilder stdout builder
-  gameloop binf gstate' rstate' queue
+  unless isGameOver $ gameloop binf gstate' rstate' queue
 
 -- | main.
 main :: IO ()
