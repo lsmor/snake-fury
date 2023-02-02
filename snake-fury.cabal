@@ -32,13 +32,14 @@ library
   default-extensions:
       StrictData
   build-depends:
-      base ^>=4.14
-    , BoundedChan ^>= 1.0.3.0
-    , array ^>= 0.5.4.0
-    , bytestring ^>= 0.10.12.0
-    , containers ^>= 0.6.5.1
-    , mtl ^>= 2.2.2
-    , random ^>= 1.2.0
+      base >=4.14 && < 5
+    , BoundedChan
+    , array
+    , bytestring
+    , containers
+    , transformers
+    , mtl
+    , random
   default-language: Haskell2010
 
 library gui
@@ -51,15 +52,15 @@ library gui
   default-extensions:
       StrictData
   build-depends:
-      snake-fury
+    , base >=4.14 && < 5
+    , snake-fury
     , sdl2 ^>= 2.5.3.0
     , sdl2-ttf ^>= 2.1.2
-    , base ^>=4.14
-    , array ^>= 0.5.4.0
-    , mtl ^>= 2.2.2
-    , text ^>= 1.2
-    , linear ^>= 1.21.6
-    , BoundedChan ^>= 1.0.3.0
+    , array
+    , mtl
+    , text
+    , linear
+    , BoundedChan
   default-language: Haskell2010
 
 executable snake-gui
@@ -74,7 +75,7 @@ executable snake-gui
   build-depends:
       snake-fury
     , gui
-    , base ^>=4.14
+    , base >=4.14 && < 5
     , sdl2 ^>= 2.5.3.0
     , sdl2-ttf ^>= 2.1.2
   default-language: Haskell2010
@@ -89,7 +90,8 @@ executable snake-tui
       StrictData
   ghc-options: -threaded -rtsopts -Wall
   build-depends:
-      base >=4.7 && <5
+      base
     , snake-fury
+    , bytestring
   default-language: Haskell2010
 
