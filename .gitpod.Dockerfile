@@ -8,11 +8,12 @@ RUN sudo apt-get install -y build-essential curl libffi-dev libffi7 libgmp-dev l
 RUN sudo curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
 
 # Add ghcup to path and add the folder stack installs the software
+ENV GHC_VERSION=9.2.5
+ENV STACK_YAML=stack-ghc-${GHC_VERSION}.yaml
 ENV PATH=${PATH}:${HOME}/.ghcup/bin
 
 # Set up the environment. 
-RUN ghcup install ghc 8.10.7
-RUN ghcup set ghc 8.10.7
+RUN ghcup install ghc ${GHC_VERSION} --set
 RUN ghcup install hls
 RUN ghcup install stack
 RUN ghcup install cabal
