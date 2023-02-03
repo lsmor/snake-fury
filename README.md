@@ -167,4 +167,4 @@ This challenge is worthless. I've being learning Haskell for the last 6 months a
 This challenge should make an effort to explain all the inconviniences newcommers should face when getting into the language.
 ```
 
-Thanks for reading.
+Thanks for reading
