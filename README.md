@@ -3,16 +3,11 @@
 - [snake-fury](#snake-fury)
   - [Introduction](#introduction)
     - [note about not using monads](#note-about-not-using-monads)
-  - [Start coding. Building a MVP](#start-coding-building-a-mvp)
-    - [On using vscode](#on-using-vscode)
-  - [Refactors](#refactors)
+  - [Start coding: Building a MVP](#start-coding-building-a-mvp)
+  - [Continue coding: Refactors](#continue-coding-refactors)
   - [Solution branches](#solution-branches)
-  - [Building and Running](#building-and-running)
   - [Architecture](#architecture)
-  - [Set up a development environment](#set-up-a-development-environment)
-  - [Contributions](#contributions)
-
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/lsmor/snake-fury)
+  - [Contributions and Feedback](#contributions-and-feedback)
 
 ## Introduction
 
@@ -34,44 +29,59 @@ Below there is a dramatization of Haskell's learning curve. This challenge aims 
 > By that I mean, not using do notation nor functor/applicative/monads combinators like `liftA2`, `fmap`, `>>=`, etc...
 > Obviously, The IO and the asynchronous part of the code are provided and the challenger is not expected to solve it.
 
-## Start coding. Building a MVP
+## Start coding: Building a MVP
 
-Be sure you have a haskell development environment [up and running](#set-up-a-development-environment). If you don't want to install Haskell's toolchain yourself, you can use gitpod to quickly jump into an online environment.
+First you need access to a Haskell development environment. You can either:
 
-Clone the code and move to `snake-fury-exercise` branch  
+- Install it locally following the [official guide](https://www.haskell.org/get-started/) (Recommended).
+- You can use gitpod to quickly jump into an [online environment](https://www.gitpod.io/docs/introduction/getting-started) (You will need a fork of the repo in order to save your progress).
+
+Once you have a dev-env up and running, clone the code and move to `snake-fury-exercise` branch
 
 ```bash
 git clone https://github.com/lsmor/snake-fury.git
 git checkout snake-fury-exercise
+
+# Optionally, you can create a solution branch out of this one
+git checkout -b my-solution # (example name)
 ```
 
-I'd recommend to create a branch for your solution (ex: `git checkout -b my-solution`) but you can use `snake-fury-exercise`. You should see this folder structure (among other files)
+You should see this folder structure (among other files)
 
 ```bash
 app
- |- Main.hs            # Here is the entrypoint of your application. This is implemented for you
+ |- Main.hs            # (implemented)     the entrypoint of your application.
 src
- |- EventQueue.hs      # Here is the EventQueue. This is implemented for you
- |- GameState.hs       # here will go the logic of the game. You have to complete this file
- |- RenderState.hs     # here will go the data structure for rendering the game. You have to complete this file
- |- Initialization.hs  # some utility functions. You don't need to touch this file.
+ |- EventQueue.hs      # (implemented)     here is the EventQueue.
+ |- GameState.hs       # (not implemented) here will go the logic of the game.
+ |- RenderState.hs     # (not implemented) here will go the data structures for rendering the game
+ |- Initialization.hs  # (implemented)     some utility functions
 ```
 
-Open files `src/GameState.hs` and `src/RenderState.hs`. You'll find the exercises statements as comments.
+Exercises are comments in files:
 
-Each file correspond to each component in the system (and some utilities to keep code simpler). Be sure you read the about the [architecture](#architecture) to understand why the code is splitted this way. Notice that you'll need to implement as many auxiliary functions as you need to make it work. If you feel stuck you can check the [solution](#solution-branches) I've implemented. It is totally fine if you implement a different one.
+- `src/GameState.hs`
+- `src/RenderState.hs`
 
-Once you fill `GameState.hs` and `RenderState.hs` you should be able to run the snake game in a terminal with the following command `cabal run snake-fury -- height width fps`. Use arrow keys to move the snake.
+The can be filled in any order.
+
+Each file correspond to each component in the system (and some utilities to keep code simpler). Be sure you read the about the [architecture](#architecture) to understand why the code is splitted this way. Notice that you'll need to implement as many auxiliary functions as you need to make it work. If you feel stuck you can check the [solution](#solution-branches) I've implemented.
+
+Once you complete all exercises in `GameState.hs` and `RenderState.hs` you should be able to run the snake game in a terminal with the command below. Use the arrow keys to move the snake.
+
+```bash
+# cabal users
+cabal build
+cabal run snake-fury -- height width fps # A common set up is a 10x10 board running at 6 fps
+
+# stack users
+stack build --stack-yaml stack-ghc-<your.system.version>.yaml
+stack run snake-fury -- height width fps # A common set up is a 10x10 board running at 6 fps
+```
 
 ![example of running](./assets/snake-mvp.gif)
 
-### On using vscode
-
-If you have configured well your vscode you should be able to run in-comment examples. If you can't, something has gone wrong. Be sure you've followed the [instructions](#set-up-a-development-environment). Below there is an example of what you should see.
-
-![example of in-comment test](./assets/example-inline-test.gif)
-
-## Refactors
+## Continue coding: Refactors
 
 You've built a minimum viable product. Now it is time to improve it!. In the `exercises` folder you have intructions for refactoring. Follow them one by one as enumerated. One of the ideas is you feel the power of the type system when refactoring. Also you'll be dealing with poor design choices implemented in the mpv part.
 
@@ -94,48 +104,24 @@ You have multiple solutions branches, one for each refactor step and one for the
 - `solution-refactor-4.2` branch corresponds to the solution of the fourth refactor, step 2 in [exercises/refactor-4](exercises/refactor-4.md#step-2-glue-together-renderstate-and-gamestate)
 - `solution-refactor-5` branch corresponds to the solution of the fifth refactor in [exercises/refactor-5](exercises/refactor-5.md)
 
-My solution might be different than yours, and that is totally fine.
+My solution might be different than yours, and that is totally fine. All solution branches should build and run the same as your exercise branch. That is:
 
-## Building and Running
-
-This project is prepare for both `cabal` and `stack`. At the moment the only major difference between this tools is the building plan. If you are a newcommer, you'll find `stack` slightly easier to use, but cabal is also fairly easy. Even if you are using `stack`, this repository won't allow it to install `ghc`, you need to have it installed in your `PATH`. Check [this](#set-up-a-development-environment) section for more information.
-
-Notice the `main` branch is experimental and can change (even into a non-compilable code), so don't use it to build the project. For stable branches, use `solution-xxx`. To run the executable, you have to build first with either `cabal` or `stack` using
-
-```bash
-git checkout solution-xxx
-
-# cabal users
-cabal build
-
-# stack users
-stack build
-```
-
-To run it, you have to pass the height, width and fps (consider playing in a range from 5 to 15 fps)
-
-```bash
-# cabal users. 7 fps is a normal speed for snake game
-cabal run snake-fury -- 10 10 7
-
-# stack users. 7 fps is a normal speed for snake game
-stack run snake-fury -- 10 10 7
-```
-
-> note: At the moment the `main` branch doesn't use frames per second but microseconds as input parameter. Hence `cabal run snake-fury -- 10 10 100000` will run at 10 fps. In the exercise branch, the input parameter is correct. So if you want to build from `main` be aware of this change.
+> note 1: `main` branch is unstable an you shouldn't build it. Contains all sort of experiments, including an heavy sdl front-end
+>
+> note 2: At the moment the `main` branch doesn't use frames per second but microseconds as input parameter. Hence `cabal run snake-fury -- 10 10 100000` will run at 10 fps. In the exercise branch, the input parameter is correct. So if you want to build from `main` be aware of this change.
 
 ## Architecture
 
 The general architecture of the software is the following:
 
 - There are three major components:
-  - An Event Queue: It keeps a queue of the following events to happen in the game based on the user keyboard input
-  - A Game State: Is the logic state. It keeps track on the snake body, the current apple, the direction of movement, etc...
-  - A Render State: Is the game board. Instead of building up the board from the GameState, we keep an array in memory and modify it as convenient
-- Each compoment send a message to the next one in the following order: (user keyboard) -> EventQueue -> GameState -> RenderState -> (render device)
+  - An _Event Queue_: It keeps a queue of the following events to happen in the game based on the user keyboard input
+  - A _Game State_: Is the logic state. It keeps track on the snake body, the current apple, the direction of movement, etc...
+  - A _Render State_: Is the game board. Instead of building up the board from the GameState, we keep an array in memory and modify it as convenient
+- Each compoment sends a message to the next one in the following order: `(user keyboard) -> EventQueue -> GameState -> RenderState -> (render device)`
 - We have two threads:
-  - The secondary thread is continuously reading from user's keyboard and pushing the key strokes into an asynchronous EventQueue
-  - The main thread reads at steady time from the EventQueue, and based on what the user has pressed, it runs the game logic and prints the board in the console
+  - The secondary thread is continuously reading from user's keyboard and pushing the key strokes into an asynchronous `EventQueue`
+  - The main thread reads at steady time from the `EventQueue`, and based on what the user has pressed, it runs the game logic and prints the board in the console
 
 Notice that two threads are necessary, since user could press keys faster than the game updates (fps). For example let say we run a frame each second and a half (normal speed in the snake game), then a user is likely to press keys faster than that. If the key strokes are catched only when a frame is about to be rendered, then many strokes will be lost.
 
@@ -143,10 +129,42 @@ The following diagram helps to visualize
 
 ![Overview of the architecture](./assets/snake_architecture.png)
 
-## Set up a development environment
+## Contributions and Feedback
 
-I strongly recommend to use [ghcup](https://www.haskell.org/ghcup/) to manage your Haskell toolchain. And vscode as your editor. A local development environment can be setted up in three steps. [Check this guide](https://gist.github.com/lsmor/bb632565cd96be9da589b6e91f80f9ba)
+Please, open an issue if you find something doesn't build or there is a typo or grammar error. Also I'd appreciate if you write some feedback for me. Avoid meaningless feeback if possible.
 
-## Contributions
+Positive feedback should answer this questions:
 
-If you find something poorly explained or too difficult to follow. Feel free to open an issue.
+- How much Haskell did you know before the starting the challenge?
+- Does the project helped you with some concepts more than other resources?
+- What's the most difficult part?
+
+For example:
+
+```bash
+# Wrong
+This challenge is cool!
+
+# Right
+This challenge is cool!. I learnt some Haskell a year ago but could not build anything usefull with it (so I was in the valley of frustration and abandom the language). Monads are much clearer now, I am still wrapping my head around mtl style, but sure I will get it!!.
+```
+
+Negative feedback (is welcome) should answer this questions:
+
+- How much Haskell did you know before the starting the challenge?
+- How much of the project did you complete?
+- How can I improve the challenge?
+
+For example:
+
+```bash
+# Wrong
+This challenge is worthless
+
+# Right
+This challenge is worthless. I've being learning Haskell for the last 6 months and still I am unable to build anything usefull. Building the mpv is doable (but very difficult), but when you start with the first refactor you end up touching the f**** IO monad and using ByteString/Builder. Why on earth Haskell has not a good default string library??.
+
+This challenge should make an effort to explain all the inconviniences newcommers should face when getting into the language.
+```
+
+Thanks for reading
