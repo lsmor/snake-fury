@@ -2,8 +2,6 @@ image:
   file: .gitpod.Dockerfile
 tasks:
   - name: Build complete version of snake-fury
-    before: git checkout snake-fury-exercise
-    init: stack build
     command: |
       export PATH=${PATH}:${HOME}/.local/bin
 vscode:
