@@ -2,8 +2,8 @@ image:
   file: .gitpod.Dockerfile
 tasks:
   - name: Build complete version of snake-fury
-    init: git checkout snake-fury-exercise && stack build
     command: |
+      git checkout snake-fury-exercise && stack build
       export PATH=${PATH}:${HOME}/.local/bin
       echo -e "cradle:\n  stack:" > hie.yaml
 vscode:
