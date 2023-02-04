@@ -141,32 +141,37 @@ Positive feedback should answer these questions:
 - Does the project helped you with some concepts more than other resources?
 - What's the most difficult part?
 
-For example:
-
-```bash
-# Wrong
-This challenge is cool!
-
-# Right
-This challenge is cool!. I learnt some Haskell a year ago but could not build anything usefull with it (so I was in the valley of frustration and abandom the language). Monads are much clearer now, I am still wrapping my head around mtl style, but sure I will get it!!.
-```
-
 Negative feedback (is welcome) should answer these questions:
 
 - How much Haskell did you know before the starting the challenge?
 - How much of the project did you complete?
 - How can I improve the challenge?
 
-For example:
 
-```bash
-# Wrong
-This challenge is worthless
+Here are some examples:
 
-# Right
-This challenge is worthless. I've being learning Haskell for the last 6 months and still I am unable to build anything usefull. Building the mpv is doable (but very difficult), but when you start with the first refactor you end up touching the f**** IO monad and using ByteString/Builder. Why on earth Haskell has not a good default string library??.
+> **Wrong positive feedback**
+>
+> This challenge is cool!
 
-This challenge should make an effort to explain all the inconviniences newcommers should face when getting into the language.
-```
+---
+
+> **Right positive feedback**
+>
+> This challenge is cool!. I learnt some Haskell a year ago but could not build anything usefull with it (so I was in the valley of frustration and abandom the language). Monads are much clearer now, I am still wrapping my head around mtl style, but sure I will get it!!.
+
+---
+
+> **Wrong negative feedback**
+>
+> This challenge is worthless
+
+---
+
+> **Right negative feedback**
+>
+> This challenge is worthless. I've being learning Haskell for the last 6 months and still I am unable to build anything usefull. Building the mpv is doable (but very difficult), but when you start with the first refactor you end up touching the f**** IO monad and using ByteString/Builder. Why on earth Haskell hasn't a good default string library??.
+>
+>This challenge should make an effort to explain all the inconviniences newcommers should face when getting into the language.
 
 Thanks for reading
