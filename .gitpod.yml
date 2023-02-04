@@ -3,9 +3,7 @@ image:
 tasks:
   - name: Build complete version of snake-fury
     command: |
-      git checkout snake-fury-exercise && stack build
       export PATH=${PATH}:${HOME}/.local/bin
-      echo -e "cradle:\n  stack:" > hie.yaml
 vscode:
   extensions:
     - haskell.haskell
