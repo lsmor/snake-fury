@@ -137,16 +137,15 @@ Please, open an issue if you find something doesn't build or there is a typo or 
 
 Positive feedback should answer these questions:
 
-- How much Haskell did you know before the starting the challenge?
+- How much Haskell did you know before starting the challenge?
 - Does the project helped you with some concepts more than other resources?
-- What's the most difficult part?
+- In your opinion, What's the most difficult part?
 
 Negative feedback (is welcome) should answer these questions:
 
-- How much Haskell did you know before the starting the challenge?
-- How much of the project did you complete?
+- How much Haskell did you know before starting the challenge?
+- How much of the project have you completed?
 - How can I improve the challenge?
-
 
 Here are some examples:
 
