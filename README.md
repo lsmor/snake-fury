@@ -34,7 +34,9 @@ Below there is a dramatization of Haskell's learning curve. This challenge aims 
 First you need access to a Haskell development environment. You can either:
 
 - Install it locally following the [official guide](https://www.haskell.org/get-started/) (Recommended).
-- You can use gitpod to quickly jump into an [online environment](https://www.gitpod.io/docs/introduction/getting-started) (You will need a fork of the repo in order to save your progress).
+- You can use gitpod to quickly jump into an [online environment](https://www.gitpod.io/docs/introduction/getting-started). Follow this considerations:
+  - You will need a fork of the repo in order to save your progress
+  - If you are a `stack` user, modify the `hie.yaml` so the cradle is `stack` not `cabal`
 
 Once you have a dev-env up and running, clone the code and move to `snake-fury-exercise` branch
 
@@ -133,7 +135,7 @@ The following diagram helps to visualize
 
 Please, open an issue if you find something doesn't build or there is a typo or grammar error. Also I'd appreciate if you write some feedback for me. Avoid meaningless feeback if possible.
 
-Positive feedback should answer this questions:
+Positive feedback should answer these questions:
 
 - How much Haskell did you know before the starting the challenge?
 - Does the project helped you with some concepts more than other resources?
@@ -149,7 +151,7 @@ This challenge is cool!
 This challenge is cool!. I learnt some Haskell a year ago but could not build anything usefull with it (so I was in the valley of frustration and abandom the language). Monads are much clearer now, I am still wrapping my head around mtl style, but sure I will get it!!.
 ```
 
-Negative feedback (is welcome) should answer this questions:
+Negative feedback (is welcome) should answer these questions:
 
 - How much Haskell did you know before the starting the challenge?
 - How much of the project did you complete?
