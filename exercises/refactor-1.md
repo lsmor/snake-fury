@@ -54,7 +54,7 @@ For this challenge we are going to use a not very common representation of text:
 
 - Read the documentation of `Data.ByteString.Builder` from `bytestring` package.
 - Create a function `ppScore :: Int -> Builder` which pretty prints the score. Feel free to use a representation you like. Below you have some examples
-- Modify the function `render` to have type `:: RenderState -> Builder`. Of course, the render function should plot the score and the board itself
+- Modify the function `render` to have type `:: BoardInfo -> RenderState -> Builder`. Of course, the render function should plot the score and the board itself
 - clean errors the compiler gives. How do you print a `Builder` into the console?  (hint: check `IO` functions in the `Data.ByteString.Builder` [module](https://hackage.haskell.org/package/bytestring-0.10.6.0/docs/Data-ByteString-Builder.html))
 
 Here are some ways you can render the score:
