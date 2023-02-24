@@ -78,11 +78,11 @@ This task will expose you to a common pattern which is to define your monad stac
 Essentially, you are telling the compiler that your `GameStep` type has these capabilities. Probably you've found this repetitive. And it is!!, actually the compiler can do this for you.
 
 - In `RenderState.hs` define `newtype RenderStep m a = RenderStep {runRenderStep :: ReaderT BoardInfo (StateT RenderState m) a}`
-- Implement `Functor`, `Applicative`, `Monad`, `MonadState GameState`, `MonadReader BoardInfo` for `RenderStep` using `GeneralizedNewtypeDeriving`.
+- Implement `Functor`, `Applicative`, `Monad`, `MonadState RenderState`, `MonadReader BoardInfo` for `RenderStep` using `GeneralizedNewtypeDeriving`.
 
 ### Task 1.2: Abstract your functions
 
-- In every function using `GameStep` or `RenderStep` you should use `mtl` constraints. For example: if you have a function `fun :: GameStep a` now it will have type `fun :: (MonadState GameState, MonadReader BoardInfo) => m a`. This means _Don't use GameStep directly, but any monad with State and Read envs_
+- In every function using `GameStep` or `RenderStep` you should use `mtl` constraints. For example: if you have a function `fun :: GameStep a` now it will have type `fun :: (MonadState GameState m, MonadReader BoardInfo m) => m a`. This means _Don't use GameStep directly, but any monad with State and Read envs_
 
 - The functions you should change are:
   - `makeRandomPoint` from `GameState.hs`
