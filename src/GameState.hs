@@ -1,7 +1,7 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE InstanceSigs ,MultiParamTypeClasses #-}
 {-|
 This module defines the logic of the game and the communication with the `Board.RenderState`
 -}
@@ -13,8 +13,9 @@ import Data.Sequence ( Seq(..))
 import qualified Data.Sequence as S
 import System.Random ( uniformR, RandomGen(split), StdGen, Random (randomR), mkStdGen )
 import Data.Maybe (isJust)
-import Control.Monad.Reader (ReaderT (runReaderT), ask, runReader, MonadReader, Reader)
+import Control.Monad.Reader (ReaderT (runReaderT), ask, runReader, MonadReader (local), Reader)
 import Control.Monad.State.Strict (StateT, get, put, modify, gets, runStateT, MonadState, State, runState)
+import Control.Monad.RWS.Class (MonadState(state))
 
 data Movement = North | South | East | West deriving (Show, Eq)
 data SnakeSeq = SnakeSeq {snakeHead :: Point, snakeBody :: Seq Point} deriving (Show, Eq)
@@ -34,7 +35,36 @@ data GameState = GameState
   deriving (Show, Eq)
 
 newtype GameStep m a = GameStep {runGameStep :: ReaderT BoardInfo (StateT GameState m) a}
-  deriving newtype (Functor, Applicative, Monad, MonadState GameState, MonadReader BoardInfo)
+
+instance Functor m => Functor (GameStep m) where
+  -- if m is a Functor then (StateT GameState m) is a Functor, and so it is (ReaderT BoardInfo (StateT GameState m) 
+  -- Because GameStep is a silly wrapper aroung (ReaderT ...), in order to define fmap we just need to wrap-unwrap
+  fmap :: Functor m => (a -> b) -> GameStep m a -> GameStep m b
+  fmap f (GameStep r) = GameStep $ fmap f r 
+
+-- For applicative, is exactly the same.
+instance Monad m => Applicative (GameStep m) where
+  pure a = GameStep $ pure a
+  (GameStep f) <*> (GameStep r) = GameStep $ f <*> r 
+
+-- For Monad is a little bit tricker, but still easy. You just need to puzzle-up the types
+instance Monad m => Monad (GameStep m) where
+  (>>=) :: Monad m => GameStep m a -> (a -> GameStep m b) -> GameStep m b
+  (GameStep r) >>= f = GameStep $ r >>= (runGameStep . f)
+
+-- Notice you don't need to have MonadReader BoardInfo m, because m is the monad inside StateT. 
+-- The type in GameStep is already a (ReaderT BoardInfo ... ) so it is an instance of MonadReader BoardInfo
+-- as long as m is a monad
+instance Monad m => MonadReader BoardInfo (GameStep m) where 
+  ask :: Monad m => GameStep m BoardInfo
+  ask = GameStep ask
+  local :: Monad m => (BoardInfo -> BoardInfo) -> GameStep m a -> GameStep m a
+  local f (GameStep r) = GameStep $ local f r
+
+instance Monad m => MonadState GameState (GameStep m) where 
+  state :: Monad m => (GameState -> (a, GameState)) -> GameStep m a
+  state f = GameStep $ state f
+
 
 -- | calculate the oposite movement. This is done because if snake is moving up
 -- We can not change direction to south.
