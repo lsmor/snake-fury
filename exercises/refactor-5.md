@@ -6,9 +6,9 @@
     - [Task 1.2: Create a single all-in `App` type](#task-12-create-a-single-all-in-app-type)
   - [Congratulations](#congratulations)
 
-We are finally in the last step of this project. We are going to create a fully abstracted version of our code. The way we are doing this is by creating classes for each component of our code. Let me recall the general architecture of the code.
+We are finally in the last step of this project. We are going to create a fully abstracted version of our code. The way we are doing this is by creating classes for each component of our code. Let me recall the general architecture:
 
-![snake-fury arquitecture](../../snake-fury/assets/snake_arquitecture.png)
+![snake-fury arquitecture](../assets/snake_architecture.png)
 
 Let's summarize what we have:
 
