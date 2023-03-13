@@ -1,8 +1,9 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DerivingVia #-}
-{-# LANGUAGE InstanceSigs ,MultiParamTypeClasses #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE InstanceSigs #-}
+
 {-|
 This module defines the logic of the game and the communication with the `Board.RenderState`
 -}
@@ -41,12 +42,12 @@ instance Functor m => Functor (GameStep m) where
   -- if m is a Functor then (StateT GameState m) is a Functor, and so it is (ReaderT BoardInfo (StateT GameState m) 
   -- Because GameStep is a silly wrapper aroung (ReaderT ...), in order to define fmap we just need to wrap-unwrap
   fmap :: Functor m => (a -> b) -> GameStep m a -> GameStep m b
-  fmap f (GameStep r) = GameStep $ fmap f r 
+  fmap f (GameStep r) = GameStep $ fmap f r
 
 -- For applicative, is exactly the same.
 instance Monad m => Applicative (GameStep m) where
   pure a = GameStep $ pure a
-  (GameStep f) <*> (GameStep r) = GameStep $ f <*> r 
+  (GameStep f) <*> (GameStep r) = GameStep $ f <*> r
 
 -- For Monad is a little bit tricker, but still easy. You just need to puzzle-up the types
 instance Monad m => Monad (GameStep m) where
@@ -56,16 +57,17 @@ instance Monad m => Monad (GameStep m) where
 -- Notice you don't need to have MonadReader BoardInfo m, because m is the monad inside StateT. 
 -- The type in GameStep is already a (ReaderT BoardInfo ... ) so it is an instance of MonadReader BoardInfo
 -- as long as m is a monad
-instance Monad m => MonadReader BoardInfo (GameStep m) where 
+instance Monad m => MonadReader BoardInfo (GameStep m) where
   ask :: Monad m => GameStep m BoardInfo
   ask = GameStep ask
   local :: Monad m => (BoardInfo -> BoardInfo) -> GameStep m a -> GameStep m a
   local f (GameStep r) = GameStep $ local f r
 
-instance Monad m => MonadState GameState (GameStep m) where 
+instance Monad m => MonadState GameState (GameStep m) where
   state :: Monad m => (GameState -> (a, GameState)) -> GameStep m a
   state f = GameStep $ state f
 
+-- New class for object which has access to GameState.
 class HasGameState state where
   getGameState :: state -> GameState
   setGameState :: state -> GameState -> state
