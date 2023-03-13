@@ -103,7 +103,7 @@ The current state of things is satisfactory, as we can change the monad stack an
 
 Nevertheless, we have a little problem still. Take a look to `Main.gameloop` function. This function is very error prone, because we need to take care of manually passing updated state to the next execution of the loop. Also, it is on charge of pulling event, updating state and putting the render into the console. Just to reminder. This is how our architecture looks like:
 
-![snake-fury arquitecture](../../snake-fury/assets/snake_arquitecture.png)
+![snake-fury arquitecture](../assets/snake_architecture.png)
 
 It makes little sense that the main loop explicitly has to care about the updated states. This should be done implicitly when calling `move` and `render` during the `gameloop`. In other words, we would like the implementation of `gameloop` to look like:
 
