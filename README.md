@@ -138,7 +138,36 @@ The following diagram helps to visualize
 
 ## Contributions and Feedback
 
-Please, open an issue if you find something doesn't build or there is a typo or grammar error. Also I'd appreciate if you write some feedback for me. Avoid meaningless feeback if possible.
+Please, open an issue if you:
+
+- find some solution branch doesn't build. Typically this is due to some external dependencies not available or an error with `cabal`. Add label _solution branch does not build_ to the issue
+- If you think the README or any of the exercises is poorly written, or could be improved substantially. Add label _documentation_ to the issue
+- If the software builds but it missbehaves. For example, the snake doesn't move, or the board looks wrong. Add label _bug_ to the issue
+- If you want to provide some feedback (see below). Add label _feedback_ to the issue.
+
+If you want to contribute with a PR, take into account that due to the refactoring nature of the challenge, there are many branches. This makes integration difficult but you should follow this two rules:
+
+- Documentation should be merge into `main` branch. This rule apply to README, any markdown under `exercises`, and any file in the `assets` folder
+- Code should be merge into `solution-mvp` if the change applies to all refactors or `solution-refactor-XXX` if the change applies only to that refactor, hence you should branch out from the corresponding branch. Any change done in `solution-mvp` is merge into `snake-fury-exercise` and `solution-refactor-XXX`. 
+- If you aren't sure how to contribute, just ask :)
+
+The branch graph look like:
+```txt
+main
+ |-solution-mvp
+   |-snake-fury-exercise
+   |-solution-refactor-1
+     |-solution-refactor-2
+       |-solution-refactor-2.2
+         |-solution-refactor-3
+           |-solution-refactor-4.1
+             |-solution-refactor-4.2
+               |-solution-refactor-5
+```
+
+
+
+Also I'd appreciate if you write some feedback for me. As already said, open an issue with a label _feedback_. These issue won't be closed, as it is easier for someone comming to the challenge to filter by open issues with label _feedback_, rather than closed issues. Please, do not use the _feedback_ issue for any other than providing feedback, so if you have an idea on how to improve the challenge open a second issue with your proposal. Ideally _feedback_ issue will have a maximum of two comments: the feedback itself, and a second comment in case the issue is outdated due to changes.  Avoid meaningless feeback if possible.
 
 Positive feedback should answer these questions:
 
