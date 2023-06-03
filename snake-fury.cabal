@@ -48,7 +48,7 @@ executable snake-fury
       app
   default-extensions:
       StrictData
-  ghc-options: -threaded -rtsopts -Wall
+  ghc-options: -threaded -rtsopts -Wall "-with-rtsopts --io-manager=native"
   build-depends:
       base
     , snake-fury
