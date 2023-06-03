@@ -69,9 +69,14 @@ The can be filled in any order.
 
 Each file correspond to each component in the system (and some utilities to keep code simpler). Be sure you read the about the [architecture](#architecture) to understand why the code is structured this way. Notice that you'll need to implement as many auxiliary functions as you need to make it work. If you feel stuck you can check the [solution](#solution-branches) I've implemented.
 
-Once you complete all exercises in `GameState.hs` and `RenderState.hs` you should be able to run the snake game in a terminal with the command below. Use the arrow keys to move the snake.
+Once you complete all exercises in `GameState.hs` and `RenderState.hs` you should be able to run the snake game in a terminal with the command below.
 
 ```bash
+# To move the snake, either
+#   use arrow keys: ← ↑ → ↓
+#   use vim motions: hjkl
+#   use gamer motions: wasd
+
 # cabal users
 cabal build
 cabal run snake-fury -- height width fps # A common set up is a 10x10 board running at 6 fps
