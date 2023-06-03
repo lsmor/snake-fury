@@ -75,12 +75,34 @@ getKey = reverse <$> getKey' ""
 writeUserInput :: EventQueue -> IO ()
 writeUserInput queue@(EventQueue userqueue _ _) = do
   c <- getKey
-  case c of
-    "\ESC[A" -> tryWriteChan userqueue North >> writeUserInput queue -- \ESC[A/D/C/B are the escape codes for the arrow keys.
-    "\ESC[D" -> tryWriteChan userqueue West >> writeUserInput queue
-    "\ESC[C" -> tryWriteChan userqueue East >> writeUserInput queue
-    "\ESC[B" -> tryWriteChan userqueue South >> writeUserInput queue
-    _ -> writeUserInput queue
+  case parseUserInput c of
+    Just dir -> tryWriteChan userqueue dir >> writeUserInput queue 
+    Nothing  -> writeUserInput queue
+
+{- | Parse common arrow-like keys
+- \ESC[A/D/C/B are the escape codes for the arrow keys.
+- hjkl are vim-like movements
+- wasd are common in games
+-}
+parseUserInput :: String -> Maybe Snake.Movement
+
+parseUserInput "\ESC[A" = Just Snake.North
+parseUserInput "w" = Just Snake.North
+parseUserInput "k" = Just Snake.North
+
+parseUserInput "\ESC[D" = Just Snake.West
+parseUserInput "a" = Just Snake.West
+parseUserInput "h" = Just Snake.West
+
+parseUserInput "\ESC[C" = Just Snake.East
+parseUserInput "d" = Just Snake.East
+parseUserInput "l" = Just Snake.East
+
+parseUserInput "\ESC[B" = Just Snake.South
+parseUserInput "s" = Just Snake.South
+parseUserInput "j" = Just Snake.South
+
+parseUserInput _ = Nothing
 
 -- | Read the EventQueue and generates an Event to pass to the user logic
 readEvent :: EventQueue -> IO Event
