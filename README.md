@@ -60,14 +60,14 @@ src
  |- Initialization.hs  # (implemented)     some utility functions
 ```
 
-Exercises are comments in files:
+Exercises are comments in the files:
 
 - `src/GameState.hs`
 - `src/RenderState.hs`
 
-The can be filled in any order.
+They can be filled in any order.
 
-Each file correspond to each component in the system (and some utilities to keep code simpler). Be sure you read the about the [architecture](#architecture) to understand why the code is structured this way. Notice that you'll need to implement as many auxiliary functions as you need to make it work. If you feel stuck you can check the [solution](#solution-branches) I've implemented.
+Each file correspond to each component in the system (and some utilities to keep code simpler). Be sure you read the [architecture](#architecture) section to understand why the code is structured this way. Notice that you'll need to implement as many auxiliary functions as you need to make it work. If you feel stuck you can check the [solution](#solution-branches) I've implemented.
 
 Once you complete all exercises in `GameState.hs` and `RenderState.hs` you should be able to run the snake game in a terminal with the command below.
 
@@ -111,11 +111,11 @@ You have multiple solutions branches, one for each refactor step and one for the
 - `solution-refactor-4.2` branch corresponds to the solution of the fourth refactor, step 2 in [exercises/refactor-4](exercises/refactor-4.md#step-2-glue-together-renderstate-and-gamestate)
 - `solution-refactor-5` branch corresponds to the solution of the fifth refactor in [exercises/refactor-5](exercises/refactor-5.md)
 
-My solution might be different than yours, and that is totally fine. All solution branches should build and run the same as your exercise branch. That is:
+My solution might be different than yours, and that is totally fine. All solution branches should build and run the same as your exercise branch.
 
 > note 1: `main` branch is unstable an you shouldn't build it. Contains all sort of experiments, including an heavy sdl front-end
 >
-> note 2: At the moment the `main` branch doesn't use frames per second but microseconds as input parameter. Hence `cabal run snake-fury -- 10 10 100000` will run at 10 fps. In the exercise branch, the input parameter is correct. So if you want to build from `main` be aware of this change.
+> note 2: At the moment, the `main` branch doesn't use frames per second but microseconds as input parameter. Hence `cabal run snake-fury -- 10 10 100000` will run at 10 fps. In the exercise branch, the input parameter is correct. So if you want to build from `main` be aware of this change.
 
 ## Architecture
 
@@ -147,8 +147,8 @@ Please, open an issue if you:
 
 If you want to contribute with a PR, take into account that due to the refactoring nature of the challenge, there are many branches. This makes integration difficult but you should follow these two rules:
 
-- Documentation should be merge into `main` branch. This rule apply to README, any markdown under `exercises`, and any file in the `assets` folder
-- Code should be merge into `solution-mvp` if the change applies to all refactors or `solution-refactor-XXX` if the change applies only to that refactor, hence you should branch out from the corresponding branch. Any change done in `solution-mvp` is merge into `snake-fury-exercise` and `solution-refactor-XXX`.
+- **Documentation** should be merge into `main` branch. This rule apply to README, any markdown under `exercises`, and any file in the `assets` folder
+- **Code** should be merge into `solution-mvp` if the change applies to all refactors; Or merge into `solution-refactor-XXX` if the change applies only to that refactor, hence you should branch out from the corresponding branch. Any change done in `solution-mvp` is merge into `snake-fury-exercise` and `solution-refactor-XXX`.
 - If you aren't sure how to contribute, just ask :)
 
 The branch graph look like:
