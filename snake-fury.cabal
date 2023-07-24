@@ -27,6 +27,7 @@ library
       Paths_snake_fury
   hs-source-dirs:
       src
+  ghc-options: -Wall
   default-extensions:
       StrictData
   build-depends:
